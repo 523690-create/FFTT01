@@ -7,6 +7,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.os.Bundle
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.slider.Slider
@@ -115,14 +116,14 @@ class WaveletActivity : AppCompatActivity() {
     }
 
     private fun updateAllLabelPositions() {
-        adjustSliderThickness(sliderLevel, txtLevelValue)
-        adjustSliderThickness(sliderOrder, txtOrderValue)
-        adjustSliderThickness(sliderSampling, txtSamplingValue)
-        adjustSliderThickness(sliderThreshold, txtThresholdValue)
-        adjustSliderThickness(sliderColor, txtColorValue)
+        adjustSliderThickness(sliderLevel, txtLevelValue, isNarrow = true)
+        adjustSliderThickness(sliderOrder, txtOrderValue, isNarrow = true)
+        adjustSliderThickness(sliderSampling, txtSamplingValue, isNarrow = true)
+        adjustSliderThickness(sliderThreshold, txtThresholdValue, isNarrow = true)
+        adjustSliderThickness(sliderColor, txtColorValue, isNarrow = true)
     }
 
-    private fun adjustSliderThickness(slider: Slider, label: TextView?) {
+    private fun adjustSliderThickness(slider: Slider, label: TextView?, isNarrow: Boolean = true) {
         slider.post {
             val parent = slider.parent as? android.view.View ?: return@post
             val availableWidth = parent.width.toFloat()
@@ -130,7 +131,8 @@ class WaveletActivity : AppCompatActivity() {
 
             val density = resources.displayMetrics.density
             val gutterPx = 4f * density
-            val maxThickness = 88f * density
+            // Wavelet sliders are also quite many, so we use a narrower maxThickness by default
+            val maxThickness = (if (isNarrow) 54f else 88f) * density
             val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
 
             if (thickness > 0) {
@@ -149,26 +151,54 @@ class WaveletActivity : AppCompatActivity() {
 
     private fun updateLabelPosition(slider: Slider, label: TextView?) {
         if (label == null) return
-        if (slider.height == 0) {
-            slider.post { updateLabelPosition(slider, label) }
+        
+        // If the view is effectively hidden (GONE), skip to avoid infinite layout loops.
+        if (slider.visibility == android.view.View.GONE || label.visibility == android.view.View.GONE) return
+
+        // Ensure dimensions and layout are ready
+        if (slider.height == 0 || label.height == 0 || label.layout == null) {
+            label.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    if (label.height > 0 && label.layout != null && slider.height > 0) {
+                        label.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        updateLabelPosition(slider, label)
+                    }
+                }
+            })
+            label.post { updateLabelPosition(slider, label) }
             return
         }
+
         val range = slider.valueTo - slider.valueFrom
-        if (range == 0f) return
-
+        if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
-        val totalHeight = slider.height.toFloat()
-
-        // trackHeight is 88dp in XML, so thumbRadius is 44dp.
-        val thumbRadiusPx = (slider.trackHeight / 2f)
-
-        val trackTop = thumbRadiusPx
-        val trackBottom = totalHeight - thumbRadiusPx
+        
+        // 1. Determine center of thumb circle (thumbY relative to parent)
+        val thumbRadius = slider.thumbRadius.toFloat()
+        val density = label.resources.displayMetrics.density
+        val edgeMargin = 4f * density 
+        
+        val trackTop = slider.paddingTop + thumbRadius + edgeMargin
+        val trackBottom = slider.height - slider.paddingBottom - thumbRadius - edgeMargin
         val trackLength = trackBottom - trackTop
+        
+        val thumbYInSlider = trackBottom - (normalizedValue * trackLength)
+        val thumbYInParent = slider.top + thumbYInSlider
 
-        val thumbY = trackBottom - (normalizedValue * trackLength)
-        val viewCenterY = totalHeight / 2f
-        label.translationY = thumbY - viewCenterY
+        // 2. Determine geometric center of the text (relative to label view)
+        val layout = label.layout
+        val firstLineTop = layout.getLineTop(0).toFloat()
+        val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
+        val textHeight = lastLineBottom - firstLineTop
+        
+        val contentHeight = label.height - label.paddingTop - label.paddingBottom
+        val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
+        val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
+
+        // 3. Align centers: label.top + translationY + textCenterInLabel = thumbYInParent
+        label.translationY = 0f 
+        val translationNeeded = thumbYInParent - (label.top + textCenterInLabel)
+        label.translationY = translationNeeded
     }
 
     private fun Slider.setSafeValue(v: Float) {

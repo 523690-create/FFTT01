@@ -40,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="4"
+            android:weightSum="5"
             android:layout_marginBottom="4dp">
 
             <Button
@@ -86,6 +86,20 @@
                 android:ellipsize="end" />
 
             <Button
+                android:id="@+id/btnViewerSweep"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="SWEEP\nOFF"
+                android:backgroundTint="#FF69B4"
+                android:textColor="#FFFFFF"
+                android:layout_margin="2dp"
+                android:maxLines="2"
+                android:textSize="7sp"
+                android:textStyle="bold"
+                android:ellipsize="end" />
+
+            <Button
                 android:id="@+id/btnViewerWavelet"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -119,10 +133,10 @@
                     android:layout_height="wrap_content"
                     android:text="EQUALIZER"
                     android:textColor="#FFFFFF"
-                    android:textSize="20sp"
+                    android:textSize="14sp"
                     android:gravity="center"
                     android:textStyle="bold"
-                    android:layout_marginBottom="2dp"/>
+                    android:layout_marginBottom="0dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -218,10 +232,10 @@
                     android:layout_height="wrap_content"
                     android:text="FFT"
                     android:textColor="#FFFFFF"
-                    android:textSize="20sp"
+                    android:textSize="14sp"
                     android:gravity="center"
                     android:textStyle="bold"
-                    android:layout_marginBottom="2dp"/>
+                    android:layout_marginBottom="0dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -253,14 +267,13 @@
 
             <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#444444" android:layout_marginHorizontal="4dp"/>
 
-            <!-- CLR Slider -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="CLR" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" android:gravity="center"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="COLOR" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" android:gravity="center"/>
                 <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                     <com.google.android.material.slider.Slider
                         android:id="@+id/vColor"

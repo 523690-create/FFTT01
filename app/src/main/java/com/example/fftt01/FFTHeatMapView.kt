@@ -242,18 +242,25 @@ class FFTHeatMapView @JvmOverloads constructor(
     fun updateFFT(data: FloatArray, force: Boolean = false) {
         if (isFrozen && !force) return
         val bitmap = spectrogramBitmap ?: return
-        val mapping = yToBinMapping ?: return
         val h = bitmap.height
         
         currentColumn = (currentColumn + 1) % maxHistory
         
         val columnPixels = IntArray(h)
-        for (y in 0 until h) {
-            val binIdx = mapping[y]
-            if (binIdx < data.size) {
-                columnPixels[y] = getColorForValue(data[binIdx])
-            } else {
-                columnPixels[y] = Color.BLACK
+        if (data.size == h) {
+            // 1:1 mapping if data size matches height
+            for (y in 0 until h) {
+                columnPixels[y] = getColorForValue(data[y])
+            }
+        } else {
+            val mapping = yToBinMapping ?: return
+            for (y in 0 until h) {
+                val binIdx = mapping[y]
+                if (binIdx < data.size) {
+                    columnPixels[y] = getColorForValue(data[binIdx])
+                } else {
+                    columnPixels[y] = Color.BLACK
+                }
             }
         }
         

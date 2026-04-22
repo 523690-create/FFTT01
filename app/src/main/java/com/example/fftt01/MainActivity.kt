@@ -16,6 +16,7 @@ import android.media.MediaFormat
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -117,6 +118,7 @@ class MainActivity : AppCompatActivity() {
             btnEqualizerMode.visibility = View.VISIBLE
             eqSlidersLayout.visibility = View.GONE
             filterControlsLayout.visibility = View.VISIBLE
+            updateAllLabelPositions()
         }
 
         btnEqualizerMode.setOnClickListener {
@@ -124,6 +126,7 @@ class MainActivity : AppCompatActivity() {
             btnFilterMode.visibility = View.VISIBLE
             filterControlsLayout.visibility = View.GONE
             eqSlidersLayout.visibility = View.VISIBLE
+            updateAllLabelPositions()
         }
 
         btnLatency.setOnClickListener {
@@ -404,6 +407,7 @@ class MainActivity : AppCompatActivity() {
         noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
         sliderNoiseFilter.setSafeValue(noiseFilterStrength)
         txtFilterValue?.text = "${(noiseFilterStrength * 100).toInt()}\n%"
+        adjustSliderThickness(sliderNoiseFilter, txtFilterValue, isFilter = true)
         sliderNoiseFilter.addOnChangeListener { slider, value, _ ->
             noiseFilterStrength = value
             txtFilterValue?.text = "${(value * 100).toInt()}\n%"
@@ -417,6 +421,7 @@ class MainActivity : AppCompatActivity() {
         // Rise: Milliseconds (1 to 1000)
         val savedRiseMs = prefs.getFloat("noise_filter_rise_ms", 50f).coerceIn(1f, 1000f)
         sliderNoiseRise.setSafeValue(savedRiseMs)
+        adjustSliderThickness(sliderNoiseRise, txtRiseValue, isFilter = true)
         sliderNoiseRise.addOnChangeListener { slider, value, _ ->
             prefs.edit().putFloat("noise_filter_rise_ms", value).apply()
             updateCoeffsFromMs()
@@ -426,6 +431,7 @@ class MainActivity : AppCompatActivity() {
         // Fall: Milliseconds (1 to 1000)
         val savedFallMs = prefs.getFloat("noise_filter_fall_ms", 200f).coerceIn(1f, 1000f)
         sliderNoiseFall.setSafeValue(savedFallMs)
+        adjustSliderThickness(sliderNoiseFall, txtFallValue, isFilter = true)
         sliderNoiseFall.addOnChangeListener { slider, value, _ ->
             prefs.edit().putFloat("noise_filter_fall_ms", value).apply()
             updateCoeffsFromMs()
@@ -460,9 +466,9 @@ class MainActivity : AppCompatActivity() {
         val txtFallValue = findViewById<TextView>(R.id.txtFallValue)
         val txtColorName = findViewById<TextView>(R.id.txtColorName)
         
-        adjustSliderThickness(sliderNoiseFilter, txtFilterValue)
-        adjustSliderThickness(sliderNoiseRise, txtRiseValue)
-        adjustSliderThickness(sliderNoiseFall, txtFallValue)
+        adjustSliderThickness(sliderNoiseFilter, txtFilterValue, isFilter = true)
+        adjustSliderThickness(sliderNoiseRise, txtRiseValue, isFilter = true)
+        adjustSliderThickness(sliderNoiseFall, txtFallValue, isFilter = true)
         adjustSliderThickness(sliderColor, txtColorName)
         
         val sliderIds = intArrayOf(R.id.eq100, R.id.eq300, R.id.eq1k, R.id.eq3k, R.id.eq8k)
@@ -474,7 +480,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun adjustSliderThickness(slider: Slider, label: TextView?) {
+    private fun adjustSliderThickness(slider: Slider, label: TextView?, isFilter: Boolean = false) {
         slider.post {
             val parent = slider.parent as? android.view.View ?: return@post
             val availableWidth = parent.width.toFloat()
@@ -482,7 +488,8 @@ class MainActivity : AppCompatActivity() {
 
             val density = resources.displayMetrics.density
             val gutterPx = 4f * density
-            val maxThickness = 88f * density
+            // Reduce max thickness for filters as they are overcrowded
+            val maxThickness = (if (isFilter) 54f else 88f) * density
             val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
 
             if (thickness > 0) {
@@ -501,28 +508,57 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateLabelPosition(slider: Slider, label: TextView?) {
         if (label == null) return
-        if (slider.height == 0) {
-            slider.post { updateLabelPosition(slider, label) }
+        
+        // If the view is effectively hidden (GONE), skip to avoid infinite layout loops.
+        // We check visibility of the view itself.
+        if (slider.visibility == View.GONE || label.visibility == View.GONE) return
+
+        // Ensure dimensions and layout are ready
+        if (slider.height == 0 || label.height == 0 || label.layout == null) {
+            label.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    if (label.height > 0 && label.layout != null && slider.height > 0) {
+                        label.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        updateLabelPosition(slider, label)
+                    }
+                }
+            })
+            label.post { updateLabelPosition(slider, label) }
             return
         }
+
         val range = slider.valueTo - slider.valueFrom
-        if (range == 0f) return
-        
+        if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
-        val totalHeight = slider.height.toFloat()
         
-        val density = resources.displayMetrics.density
-        // Use thumbRadius from XML. For wide bars it's 44dp. For EQ it's currently 22dp? 
-        // Let's check the slider's actual thumbRadius if possible, or just assume based on trackHeight.
-        val thumbRadiusPx = (slider.trackHeight / 2f)
+        // 1. Determine center of thumb circle (thumbY relative to parent)
+        val thumbRadius = slider.thumbRadius.toFloat()
+        val density = label.resources.displayMetrics.density
+        // Material Slider internal track padding: usually thumbRadius + small margin
+        val edgeMargin = 4f * density 
         
-        val trackTop = thumbRadiusPx
-        val trackBottom = totalHeight - thumbRadiusPx
+        val trackTop = slider.paddingTop + thumbRadius + edgeMargin
+        val trackBottom = slider.height - slider.paddingBottom - thumbRadius - edgeMargin
         val trackLength = trackBottom - trackTop
         
-        val thumbY = trackBottom - (normalizedValue * trackLength)
-        val viewCenterY = totalHeight / 2f
-        label.translationY = thumbY - viewCenterY
+        val thumbYInSlider = trackBottom - (normalizedValue * trackLength)
+        val thumbYInParent = slider.top + thumbYInSlider
+
+        // 2. Determine geometric center of the text (relative to label view)
+        val layout = label.layout
+        val firstLineTop = layout.getLineTop(0).toFloat()
+        val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
+        val textHeight = lastLineBottom - firstLineTop
+        
+        // Account for TextView gravity="center" positioning of the layout
+        val contentHeight = label.height - label.paddingTop - label.paddingBottom
+        val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
+        val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
+
+        // 3. Align centers: label.top + translationY + textCenterInLabel = thumbYInParent
+        label.translationY = 0f // Reset for calculation relative to layout position
+        val translationNeeded = thumbYInParent - (label.top + textCenterInLabel)
+        label.translationY = translationNeeded
     }
 
     private fun updateTimeConstantLabel(textView: TextView?, coeff: Float) {

@@ -12,6 +12,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -43,6 +44,7 @@ class ViewerActivity : AppCompatActivity() {
     private var noiseFilterStrength = 0f
     private var noiseRiseCoeff = 0.015f
     private var noiseFallCoeff = 0.05f
+    private var isSweepActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,18 +69,28 @@ class ViewerActivity : AppCompatActivity() {
     }
 
     private fun updateAllLabelPositions() {
+        val sliderFilter = findViewById<Slider>(R.id.vSliderNoiseFilter)
+        val sliderRise = findViewById<Slider>(R.id.vSliderNoiseRise)
+        val sliderFall = findViewById<Slider>(R.id.vSliderNoiseFall)
+        val txtFilterValue = findViewById<TextView>(R.id.vTxtFilterValue)
+        val txtRiseValue = findViewById<TextView>(R.id.vTxtRiseValue)
+        val txtFallValue = findViewById<TextView>(R.id.vTxtFallValue)
+        
+        adjustSliderThickness(sliderFilter, txtFilterValue, isFilter = true)
+        adjustSliderThickness(sliderRise, txtRiseValue, isFilter = true)
+        adjustSliderThickness(sliderFall, txtFallValue, isFilter = true)
+        
         val eqIds = intArrayOf(R.id.vEq100, R.id.vEq300, R.id.vEq1k, R.id.vEq3k, R.id.vEq8k)
         val eqLabels = intArrayOf(R.id.txtEq100Value, R.id.txtEq300Value, R.id.txtEq1kValue, R.id.txtEq3kValue, R.id.txtEq8kValue)
         for (i in eqIds.indices) {
-            updateLabelPosition(findViewById(eqIds[i]), findViewById(eqLabels[i]))
+            val slider = findViewById<Slider>(eqIds[i])
+            val label = findViewById<TextView>(eqLabels[i])
+            adjustSliderThickness(slider, label)
         }
-        updateLabelPosition(findViewById(R.id.vFftSize), findViewById(R.id.txtFftSizeValue))
-        updateLabelPosition(findViewById(R.id.vFftStep), findViewById(R.id.txtFftStepValue))
-        updateLabelPosition(findViewById(R.id.vColor), findViewById(R.id.txtVColorName))
-
-        updateLabelPosition(findViewById(R.id.vSliderNoiseFilter), findViewById(R.id.vTxtFilterValue))
-        updateLabelPosition(findViewById(R.id.vSliderNoiseRise), findViewById(R.id.vTxtRiseValue))
-        updateLabelPosition(findViewById(R.id.vSliderNoiseFall), findViewById(R.id.vTxtFallValue))
+        
+        adjustSliderThickness(findViewById(R.id.vFftSize), findViewById(R.id.txtFftSizeValue))
+        adjustSliderThickness(findViewById(R.id.vFftStep), findViewById(R.id.txtFftStepValue))
+        adjustSliderThickness(findViewById(R.id.vColor), findViewById(R.id.txtVColorName))
     }
 
     private fun Slider.setSafeValue(v: Float) {
@@ -96,6 +108,9 @@ class ViewerActivity : AppCompatActivity() {
         val eqLayout = findViewById<android.widget.LinearLayout>(R.id.vEqSlidersLayout)
         val filterLayout = findViewById<android.widget.LinearLayout>(R.id.vFilterControlsLayout)
         val txtEqTitle = findViewById<TextView>(R.id.txtViewerEqTitle) // The "EQUALIZER" title
+        val btnSweep = findViewById<Button>(R.id.btnViewerSweep)
+        val sizeSlider = findViewById<Slider>(R.id.vFftSize)
+        val stepSlider = findViewById<Slider>(R.id.vFftStep)
 
         btnFilter.setOnClickListener {
             if (eqLayout.visibility == android.view.View.VISIBLE) {
@@ -109,10 +124,29 @@ class ViewerActivity : AppCompatActivity() {
                 btnFilter.text = "FILTER"
                 txtEqTitle?.text = "EQUALIZER"
             }
+            updateAllLabelPositions()
         }
 
         findViewById<Button>(R.id.btnViewerBack).setOnClickListener { finish() }
         findViewById<Button>(R.id.btnViewerPlay).setOnClickListener { playAudio() }
+        
+        btnSweep.setOnClickListener {
+            isSweepActive = !isSweepActive
+            if (isSweepActive) {
+                btnSweep.text = "SWEEP/ON"
+                btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.RED)
+                sizeSlider.isEnabled = false
+                stepSlider.isEnabled = false
+                runFftSweep()
+            } else {
+                btnSweep.text = "SWEEP/OFF"
+                btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF69B4"))
+                sizeSlider.isEnabled = true
+                stepSlider.isEnabled = true
+                refreshFft()
+            }
+        }
+
         findViewById<Button>(R.id.btnViewerWavelet).setOnClickListener {
             val intent = Intent(this, WaveletActivity::class.java).apply {
                 putExtra("FILE_PATH", filePath)
@@ -141,14 +175,12 @@ class ViewerActivity : AppCompatActivity() {
                 txtValue.text = "${value.toInt()}\ndB"
                 prefs.edit().putFloat(key, value).apply()
                 updateLabelPosition(s, txtValue)
-                refreshFft()
+                triggerRefresh()
             }
         }
 
         setupNoiseFilter()
 
-        val sizeSlider = findViewById<Slider>(R.id.vFftSize)
-        val stepSlider = findViewById<Slider>(R.id.vFftStep)
         val colorSlider = findViewById<Slider>(R.id.vColor)
         val txtSizeValue = findViewById<TextView>(R.id.txtFftSizeValue)
         val txtStepValue = findViewById<TextView>(R.id.txtFftStepValue)
@@ -170,7 +202,7 @@ class ViewerActivity : AppCompatActivity() {
             txtVColorName.text = colorNames[idx.coerceIn(0, 3)]
             prefs.edit().putInt("color_scheme", idx).apply()
             updateLabelPosition(s, txtVColorName)
-            refreshFft()
+            triggerRefresh()
         }
 
         val savedSizeIdx = prefs.getInt("fft_size_idx", 3).coerceIn(0, 4)
@@ -197,7 +229,7 @@ class ViewerActivity : AppCompatActivity() {
             
             validateStepSlider(sizeSlider, stepSlider)
             updateLabelPosition(s, txtSizeValue)
-            refreshFft()
+            triggerRefresh()
         }
 
         stepSlider.addOnChangeListener { s, value, fromUser ->
@@ -211,8 +243,12 @@ class ViewerActivity : AppCompatActivity() {
             txtStepValue.text = currentStepSize.toString()
             prefs.edit().putInt("fft_step_idx", idx).apply()
             updateLabelPosition(s, txtStepValue)
-            refreshFft()
+            triggerRefresh()
         }
+    }
+
+    private fun triggerRefresh() {
+        if (isSweepActive) runFftSweep() else refreshFft()
     }
 
     private fun setupNoiseFilter() {
@@ -226,35 +262,35 @@ class ViewerActivity : AppCompatActivity() {
         noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
         sliderFilter.setSafeValue(noiseFilterStrength)
         txtFilterValue?.text = "${(noiseFilterStrength * 100).toInt()}\n%"
-        adjustSliderThickness(sliderFilter, txtFilterValue)
+        adjustSliderThickness(sliderFilter, txtFilterValue, isFilter = true)
         sliderFilter.addOnChangeListener { slider, value, _ ->
             noiseFilterStrength = value
             txtFilterValue?.text = "${(value * 100).toInt()}\n%"
             prefs.edit().putFloat("noise_filter_strength", value).apply()
             updateLabelPosition(slider, txtFilterValue)
-            refreshFft()
+            triggerRefresh()
         }
 
         // Rise: Milliseconds (1 to 1000)
         val savedRiseMs = prefs.getFloat("noise_filter_rise_ms", 50f).coerceIn(1f, 1000f)
         sliderRise.setSafeValue(savedRiseMs)
-        adjustSliderThickness(sliderRise, txtRiseValue)
+        adjustSliderThickness(sliderRise, txtRiseValue, isFilter = true)
         sliderRise.addOnChangeListener { slider, value, _ ->
             prefs.edit().putFloat("noise_filter_rise_ms", value).apply()
             updateCoeffsFromMs()
             updateLabelPosition(slider, txtRiseValue)
-            refreshFft()
+            triggerRefresh()
         }
 
         // Fall: Milliseconds (1 to 1000)
         val savedFallMs = prefs.getFloat("noise_filter_fall_ms", 200f).coerceIn(1f, 1000f)
         sliderFall.setSafeValue(savedFallMs)
-        adjustSliderThickness(sliderFall, txtFallValue)
+        adjustSliderThickness(sliderFall, txtFallValue, isFilter = true)
         sliderFall.addOnChangeListener { slider, value, _ ->
             prefs.edit().putFloat("noise_filter_fall_ms", value).apply()
             updateCoeffsFromMs()
             updateLabelPosition(slider, txtFallValue)
-            refreshFft()
+            triggerRefresh()
         }
 
         updateCoeffsFromMs()
@@ -341,7 +377,7 @@ class ViewerActivity : AppCompatActivity() {
                 extractor.release()
                 
                 rawPcmData = pcmList.toFloatArray()
-                runOnUiThread { refreshFft() }
+                runOnUiThread { triggerRefresh() }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -424,6 +460,117 @@ class ViewerActivity : AppCompatActivity() {
                 normalized[i] = ((dB - (maxDB - 80)) / 80f).coerceIn(0f, 1f)
             }
             viewerFft.updateFFT(normalized, true)
+        }
+    }
+
+    private fun runFftSweep() {
+        val pcm = rawPcmData ?: return
+        val viewHeight = viewerFft.height
+        if (viewHeight <= 0) {
+            viewerFft.post { runFftSweep() }
+            return
+        }
+
+        thread {
+            val sweepSizes = intArrayOf(512, 1024, 2048, 4096)
+            val sweepSteps = intArrayOf(256, 512, 1024, 2048, 4096)
+            
+            val baseStep = 256
+            val baseSize = 512
+            var baseHistory = 0
+            var tempOffset = 0
+            while (tempOffset + baseSize <= pcm.size) {
+                baseHistory++
+                tempOffset += baseStep
+            }
+            if (baseHistory <= 0) return@thread
+
+            val accumulationBuffer = Array(baseHistory) { FloatArray(viewHeight) }
+            
+            // Filter PCM
+            for (f in filters) f.reset()
+            val filteredPcm = FloatArray(pcm.size)
+            for (i in pcm.indices) {
+                var s = pcm[i]
+                for (f in filters) s = f.process(s)
+                filteredPcm[i] = s
+            }
+
+            val minFreq = 80f
+            val maxFreq = 10000f
+            val logMin = log10(minFreq)
+            val logMax = log10(maxFreq)
+            
+            var globalMax = 1e-9f
+
+            for (size in sweepSizes) {
+                if (size > filteredPcm.size) continue
+                val hannWindow = FloatArray(size) { i -> 
+                    (0.5f * (1 - cos(2 * PI * i / (size - 1)))).toFloat() 
+                }
+                
+                // Precalculate bin mapping for this resolution
+                val mapping = IntArray(viewHeight) { y ->
+                    val logF = logMax - (y.toFloat() / viewHeight) * (logMax - logMin)
+                    val freq = 10.0.pow(logF.toDouble()).toFloat()
+                    (freq * size / sampleRate).toInt().coerceIn(0, size / 2 - 1)
+                }
+
+                for (step in sweepSteps) {
+                    if (step > size) continue
+                    
+                    val noiseFloor = FloatArray(size / 2)
+                    var offset = 0
+                    while (offset + size <= filteredPcm.size) {
+                        val c = offset / baseStep
+                        if (c >= baseHistory) break
+
+                        val real = FloatArray(size)
+                        val imag = FloatArray(size)
+                        for (i in 0 until size) {
+                            real[i] = filteredPcm[offset + i] * hannWindow[i]
+                        }
+                        FFTUtils.compute(real, imag)
+                        
+                        val mags = FloatArray(size / 2)
+                        for (i in 0 until size / 2) {
+                            var mag = sqrt(real[i] * real[i] + imag[i] * imag[i])
+                            if (noiseFilterStrength > 0f) {
+                                if (noiseFloor[i] == 0f) noiseFloor[i] = mag
+                                else if (mag < noiseFloor[i]) noiseFloor[i] = noiseFloor[i] * (1f - noiseFallCoeff) + mag * noiseFallCoeff
+                                else noiseFloor[i] = noiseFloor[i] * (1f - noiseRiseCoeff) + mag * noiseRiseCoeff
+                                mag = (mag - noiseFloor[i] * noiseFilterStrength).coerceAtLeast(0f)
+                            }
+                            mags[i] = mag
+                        }
+
+                        for (y in 0 until viewHeight) {
+                            val mag = mags[mapping[y]]
+                            accumulationBuffer[c][y] += mag
+                            if (accumulationBuffer[c][y] > globalMax) globalMax = accumulationBuffer[c][y]
+                        }
+                        
+                        offset += step
+                    }
+                }
+            }
+
+            runOnUiThread {
+                viewerFft.setParams(baseSize, sampleRate.toFloat(), baseStep)
+                viewerFft.setMaxHistory(baseHistory)
+                viewerFft.clearHistory()
+                viewerFft.isFrozen = true
+            }
+            
+            val maxDB = 20 * log10(globalMax + 1e-9f)
+            for (c in 0 until baseHistory) {
+                val normalized = FloatArray(viewHeight)
+                for (y in 0 until viewHeight) {
+                    val dB = 20 * log10(accumulationBuffer[c][y] + 1e-9f)
+                    normalized[y] = ((dB - (maxDB - 80)) / 80f).coerceIn(0f, 1f)
+                }
+                viewerFft.updateFFT(normalized, true)
+            }
         }
     }
 
@@ -559,7 +706,7 @@ class ViewerActivity : AppCompatActivity() {
         stopAudio()
     }
 
-    private fun adjustSliderThickness(slider: Slider, label: TextView?) {
+    private fun adjustSliderThickness(slider: Slider, label: TextView?, isFilter: Boolean = false) {
         slider.post {
             val parent = slider.parent as? android.view.View ?: return@post
             val availableWidth = parent.width.toFloat()
@@ -567,7 +714,7 @@ class ViewerActivity : AppCompatActivity() {
 
             val density = resources.displayMetrics.density
             val gutterPx = 4f * density
-            val maxThickness = 88f * density
+            val maxThickness = (if (isFilter) 54f else 88f) * density
             val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
 
             if (thickness > 0) {
@@ -585,24 +732,55 @@ class ViewerActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateLabelPosition(slider: Slider, label: TextView?, thumbRadiusPx: Float = (slider.trackHeight / 2f)) {
+    private fun updateLabelPosition(slider: Slider, label: TextView?) {
         if (label == null) return
-        if (slider.height == 0) {
-            slider.post { updateLabelPosition(slider, label, thumbRadiusPx) }
+        
+        // If the view is effectively hidden (GONE), skip to avoid infinite layout loops.
+        if (slider.visibility == android.view.View.GONE || label.visibility == android.view.View.GONE) return
+
+        // Ensure dimensions and layout are ready
+        if (slider.height == 0 || label.height == 0 || label.layout == null) {
+            label.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    if (label.height > 0 && label.layout != null && slider.height > 0) {
+                        label.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        updateLabelPosition(slider, label)
+                    }
+                }
+            })
+            label.post { updateLabelPosition(slider, label) }
             return
         }
+
         val range = slider.valueTo - slider.valueFrom
-        if (range == 0f) return
-
+        if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
-        val totalHeight = slider.height.toFloat()
-
-        val trackTop = thumbRadiusPx
-        val trackBottom = totalHeight - thumbRadiusPx
+        
+        // 1. Determine center of thumb circle (thumbY relative to parent)
+        val thumbRadius = slider.thumbRadius.toFloat()
+        val density = label.resources.displayMetrics.density
+        val edgeMargin = 4f * density 
+        
+        val trackTop = slider.paddingTop + thumbRadius + edgeMargin
+        val trackBottom = slider.height - slider.paddingBottom - thumbRadius - edgeMargin
         val trackLength = trackBottom - trackTop
+        
+        val thumbYInSlider = trackBottom - (normalizedValue * trackLength)
+        val thumbYInParent = slider.top + thumbYInSlider
 
-        val thumbY = trackBottom - (normalizedValue * trackLength)
-        val viewCenterY = totalHeight / 2f
-        label.translationY = thumbY - viewCenterY
+        // 2. Determine geometric center of the text (relative to label view)
+        val layout = label.layout
+        val firstLineTop = layout.getLineTop(0).toFloat()
+        val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
+        val textHeight = lastLineBottom - firstLineTop
+        
+        val contentHeight = label.height - label.paddingTop - label.paddingBottom
+        val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
+        val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
+
+        // 3. Align centers: label.top + translationY + textCenterInLabel = thumbYInParent
+        label.translationY = 0f 
+        val translationNeeded = thumbYInParent - (label.top + textCenterInLabel)
+        label.translationY = translationNeeded
     }
 }
