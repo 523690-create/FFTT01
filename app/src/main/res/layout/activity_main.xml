@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:fitsSystemWindows="true">
+
+    <!-- Window 1: FFT Heat Map -->
+    <FrameLayout
+        android:id="@+id/fftContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintDimensionRatio="1:1">
+
+        <com.example.fftt01.FFTHeatMapView
+            android:id="@+id/fftHeatMap"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#111111" />
+
+        <com.example.fftt01.CropOverlayView
+            android:id="@+id/cropOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <!-- Window 2: Controls and EQ -->
+    <LinearLayout
+        android:id="@+id/controlsWindow"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="4dp"
+        android:background="#222222"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/guideline">
+
+        <LinearLayout
+            android:id="@+id/saveEscContainer"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal"
+            android:weightSum="3"
+            android:visibility="gone">
+            <Button
+                android:id="@+id/btnSaveInRow"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:text="SAVE"
+                android:backgroundTint="#90EE90"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_margin="4dp" />
+            <Button
+                android:id="@+id/btnEscInRow"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="ESC"
+                android:backgroundTint="#FFA500"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_margin="4dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/micAndColorLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:layout_marginBottom="2dp"
+            android:orientation="horizontal"
+            android:weightSum="2">
+            <Spinner
+                android:id="@+id/micSpinner"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:backgroundTint="#FFFFFF"
+                android:gravity="center_vertical"
+                android:padding="0dp" />
+            <Button
+                android:id="@+id/btnLatency"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Latency"
+                android:backgroundTint="#D3D3D3"
+                android:textColor="#000000"
+                android:layout_margin="2dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:padding="0dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/mainButtonsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:orientation="horizontal"
+            android:weightSum="3"
+            android:layout_marginBottom="2dp">
+
+            <Button
+                android:id="@+id/btnFilterMode"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="FILTER"
+                android:backgroundTint="#0000FF"
+                android:textColor="#FFFFFF"
+                android:layout_margin="2dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:padding="0dp" />
+
+            <Button
+                android:id="@+id/btnEqualizerMode"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="EQUALIZER"
+                android:backgroundTint="#00FF00"
+                android:textColor="#000000"
+                android:layout_margin="2dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:padding="0dp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btnGallery"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="GALLERY"
+                android:backgroundTint="#FFFF00"
+                android:textColor="#000000"
+                android:layout_margin="2dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:padding="0dp" />
+
+            <Button
+                android:id="@+id/btnQuit"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="QUIT"
+                android:backgroundTint="#FF0000"
+                android:textColor="#FFFFFF"
+                android:layout_margin="2dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:padding="0dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/eqContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/eqSlidersLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="5"
+                    android:orientation="horizontal"
+                    android:weightSum="5">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="100\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/eq100"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:valueFrom="-40.0"
+                                android:valueTo="40.0"
+                                android:value="0.0"
+                                android:stepSize="10.0"
+                                android:orientation="vertical"
+                                app:labelBehavior="gone"
+                                app:tickVisible="true"
+                                app:trackHeight="88dp"
+                                app:thumbRadius="44dp"
+                                app:thumbColor="#FFFFFF"
+                                app:trackColorActive="#00FF00"
+                                app:trackColorInactive="#007F00"
+                                android:layout_gravity="center"/>
+                            <TextView android:id="@+id/txtEqValue100" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="12sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="300\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/eq300"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:valueFrom="-40.0"
+                                android:valueTo="40.0"
+                                android:value="0.0"
+                                android:stepSize="10.0"
+                                android:orientation="vertical"
+                                app:labelBehavior="gone"
+                                app:tickVisible="true"
+                                app:trackHeight="88dp"
+                                app:thumbRadius="44dp"
+                                app:thumbColor="#FFFFFF"
+                                app:trackColorActive="#00FF00"
+                                app:trackColorInactive="#007F00"
+                                android:layout_gravity="center"/>
+                            <TextView android:id="@+id/txtEqValue300" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="12sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="1k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/eq1k"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:valueFrom="-40.0"
+                                android:valueTo="40.0"
+                                android:value="0.0"
+                                android:stepSize="10.0"
+                                android:orientation="vertical"
+                                app:labelBehavior="gone"
+                                app:tickVisible="true"
+                                app:trackHeight="88dp"
+                                app:thumbRadius="44dp"
+                                app:thumbColor="#FFFFFF"
+                                app:trackColorActive="#00FF00"
+                                app:trackColorInactive="#007F00"
+                                android:layout_gravity="center"/>
+                            <TextView android:id="@+id/txtEqValue1k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="12sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="3k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/eq3k"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:valueFrom="-40.0"
+                                android:valueTo="40.0"
+                                android:value="0.0"
+                                android:stepSize="10.0"
+                                android:orientation="vertical"
+                                app:labelBehavior="gone"
+                                app:tickVisible="true"
+                                app:trackHeight="88dp"
+                                app:thumbRadius="44dp"
+                                app:thumbColor="#FFFFFF"
+                                app:trackColorActive="#00FF00"
+                                app:trackColorInactive="#007F00"
+                                android:layout_gravity="center"/>
+                            <TextView android:id="@+id/txtEqValue3k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="12sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="8k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/eq8k"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:valueFrom="-40.0"
+                                android:valueTo="40.0"
+                                android:value="0.0"
+                                android:stepSize="10.0"
+                                android:orientation="vertical"
+                                app:labelBehavior="gone"
+                                app:tickVisible="true"
+                                app:trackHeight="88dp"
+                                app:thumbRadius="44dp"
+                                app:thumbColor="#FFFFFF"
+                                app:trackColorActive="#00FF00"
+                                app:trackColorInactive="#007F00"
+                                android:layout_gravity="center"/>
+                            <TextView android:id="@+id/txtEqValue8k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="12sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        </FrameLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+            <!-- Noise Filter Controls Overlay -->
+            <LinearLayout
+                android:id="@+id/filterControlsLayout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="FILTER %" android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold"/>
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/sliderNoiseFilter"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:valueFrom="0.0"
+                            android:valueTo="1.0"
+                            android:value="0.0"
+                            android:stepSize="0.01"
+                            android:orientation="vertical"
+                            app:labelBehavior="gone"
+                            app:trackHeight="88dp"
+                            app:thumbRadius="44dp"
+                            app:tickVisible="false"
+                            app:thumbColor="#FFFFFF"
+                            app:trackColorActive="#00FFFF"
+                            app:trackColorInactive="#007F7F"
+                            android:layout_gravity="center"/>
+                        <TextView android:id="@+id/txtFilterValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00\n%" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp" android:lineSpacingExtra="-2dp"/>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="RISE TIME" android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold"/>
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/sliderNoiseRise"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:valueFrom="1.0"
+                            android:valueTo="1000.0"
+                            android:value="50.0"
+                            android:stepSize="1.0"
+                            android:orientation="vertical"
+                            app:labelBehavior="gone"
+                            app:trackHeight="88dp"
+                            app:thumbRadius="44dp"
+                            app:tickVisible="false"
+                            app:thumbColor="#FFFFFF"
+                            app:trackColorActive="#00FFFF"
+                            app:trackColorInactive="#007F7F"
+                            android:layout_gravity="center"/>
+                        <TextView android:id="@+id/txtRiseValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00\nms" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp" android:lineSpacingExtra="-2dp"/>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="FALL TIME" android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold"/>
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/sliderNoiseFall"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:valueFrom="1.0"
+                            android:valueTo="1000.0"
+                            android:value="200.0"
+                            android:stepSize="1.0"
+                            android:orientation="vertical"
+                            app:labelBehavior="gone"
+                            app:trackHeight="88dp"
+                            app:thumbRadius="44dp"
+                            app:tickVisible="false"
+                            app:thumbColor="#FFFFFF"
+                            app:trackColorActive="#00FFFF"
+                            app:trackColorInactive="#007F7F"
+                            android:layout_gravity="center"/>
+                        <TextView android:id="@+id/txtFallValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00\nms" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp" android:lineSpacingExtra="-2dp"/>
+                    </FrameLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:weightSum="1">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="COLOR" android:textColor="#FFFFFF" android:textSize="10sp" android:textStyle="bold"/>
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/sliderColor"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:valueFrom="0.0"
+                            android:valueTo="3.0"
+                            android:value="0.0"
+                            android:stepSize="1.0"
+                            android:orientation="vertical"
+                            app:labelBehavior="gone"
+                            app:trackHeight="88dp"
+                            app:thumbRadius="44dp"
+                            app:tickVisible="true"
+                            app:haloRadius="0dp"
+                            app:thumbColor="#FFFFFF"
+                            app:trackColorActive="#AAAAAA"
+                            app:trackColorInactive="#555555"
+                            android:layout_gravity="center"/>
+                        <TextView android:id="@+id/txtColorName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Default" android:textColor="#000000" android:textSize="14sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                    </FrameLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
