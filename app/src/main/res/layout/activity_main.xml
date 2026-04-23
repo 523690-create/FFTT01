@@ -203,7 +203,7 @@
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
-                            <com.google.android.material.slider.Slider
+                            <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                                 android:id="@+id/eq100"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
@@ -234,7 +234,7 @@
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
-                            <com.google.android.material.slider.Slider
+                            <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                                 android:id="@+id/eq300"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
@@ -265,7 +265,7 @@
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
-                            <com.google.android.material.slider.Slider
+                            <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                                 android:id="@+id/eq1k"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
@@ -296,7 +296,7 @@
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
-                            <com.google.android.material.slider.Slider
+                            <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                                 android:id="@+id/eq3k"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
@@ -327,7 +327,7 @@
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
-                            <com.google.android.material.slider.Slider
+                            <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                                 android:id="@+id/eq8k"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
@@ -370,7 +370,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1">
-                        <com.google.android.material.slider.Slider
+                        <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                             android:id="@+id/sliderNoiseFilter"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
@@ -403,7 +403,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1">
-                        <com.google.android.material.slider.Slider
+                        <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                             android:id="@+id/sliderNoiseRise"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
@@ -436,7 +436,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1">
-                        <com.google.android.material.slider.Slider
+                        <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                             android:id="@+id/sliderNoiseFall"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
@@ -476,7 +476,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1">
-                        <com.google.android.material.slider.Slider
+                        <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                             android:id="@+id/sliderColor"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"

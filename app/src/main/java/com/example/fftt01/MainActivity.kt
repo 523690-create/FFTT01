@@ -420,22 +420,35 @@ class MainActivity : AppCompatActivity() {
             updateLabelPosition(slider, txtFilterValue)
         }
 
-        // Rise: Milliseconds (1 to 1000)
+        // Rise: Milliseconds (1 to 1000) Logarithmic
+        // Slider range 0.0 to 3.0 (log10(1) to log10(1000))
+        sliderNoiseRise.valueFrom = 0f
+        sliderNoiseRise.valueTo = 3f
+        sliderNoiseRise.stepSize = 0.01f
+        
         val savedRiseMs = prefs.getFloat("noise_filter_rise_ms", 50f).coerceIn(1f, 1000f)
-        sliderNoiseRise.setSafeValue(savedRiseMs)
+        sliderNoiseRise.setSafeValue(log10(savedRiseMs.toDouble()).toFloat())
+        
         adjustSliderThickness(sliderNoiseRise, txtRiseValue, isFilter = true)
         sliderNoiseRise.addOnChangeListener { slider, value, _ ->
-            prefs.edit().putFloat("noise_filter_rise_ms", value).apply()
+            val ms = 10.0.pow(value.toDouble()).toFloat()
+            prefs.edit().putFloat("noise_filter_rise_ms", ms).apply()
             updateCoeffsFromMs()
             updateLabelPosition(slider, txtRiseValue)
         }
 
-        // Fall: Milliseconds (1 to 1000)
+        // Fall: Milliseconds (1 to 1000) Logarithmic
+        sliderNoiseFall.valueFrom = 0f
+        sliderNoiseFall.valueTo = 3f
+        sliderNoiseFall.stepSize = 0.01f
+        
         val savedFallMs = prefs.getFloat("noise_filter_fall_ms", 200f).coerceIn(1f, 1000f)
-        sliderNoiseFall.setSafeValue(savedFallMs)
+        sliderNoiseFall.setSafeValue(log10(savedFallMs.toDouble()).toFloat())
+        
         adjustSliderThickness(sliderNoiseFall, txtFallValue, isFilter = true)
         sliderNoiseFall.addOnChangeListener { slider, value, _ ->
-            prefs.edit().putFloat("noise_filter_fall_ms", value).apply()
+            val ms = 10.0.pow(value.toDouble()).toFloat()
+            prefs.edit().putFloat("noise_filter_fall_ms", ms).apply()
             updateCoeffsFromMs()
             updateLabelPosition(slider, txtFallValue)
         }
@@ -452,8 +465,8 @@ class MainActivity : AppCompatActivity() {
         val frameDurationMs = (stepSize.toFloat() / sampleRate) * 1000f
         val k = ln(2.0f) * frameDurationMs
         
-        val riseMs = sliderNoiseRise.value
-        val fallMs = sliderNoiseFall.value
+        val riseMs = 10.0.pow(sliderNoiseRise.value.toDouble()).toFloat()
+        val fallMs = 10.0.pow(sliderNoiseFall.value.toDouble()).toFloat()
         
         noiseRiseCoeff = (k / riseMs).coerceIn(0.001f, 1.0f)
         noiseFallCoeff = (k / fallMs).coerceIn(0.001f, 1.0f)
@@ -493,25 +506,30 @@ class MainActivity : AppCompatActivity() {
             if (availableWidth <= 0) return@post
 
             val density = resources.displayMetrics.density
-            val gutterPx = 4f * density
             
-            var maxThicknessBase = if (isFilter) 54f else 88f
-            if (isNarrow) maxThicknessBase *= 0.8f
-            
-            val maxThickness = maxThicknessBase * density
-            val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
+            // Set text box appearance
+            label?.let {
+                it.setBackgroundColor(Color.WHITE)
+                it.setTextColor(Color.BLACK)
+                val p = (2f * density).toInt()
+                it.setPadding(p, 0, p, 0) // Keep it tight vertically
+                it.elevation = 6f * density
+                
+                // Ensure width fits longest value
+                it.minWidth = (50f * density).toInt()
+                
+                // Set text size
+                it.textSize = 10f
+            }
 
-            if (thickness > 0) {
-                slider.trackHeight = thickness.toInt()
-                // Make thumb line across the slide
-                slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
-                
-                label?.let {
-                    val sp = if (thickness < 40f * density) 8f else if (thickness < 60f * density) 10f else 12f
-                    it.textSize = sp
+            slider.post {
+                val labelWidth = label?.width ?: 0
+                if (labelWidth > 0) {
+                    slider.trackHeight = labelWidth
+                    slider.thumbRadius = (2f * density).toInt() // Small line
+                    slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
+                    updateLabelPosition(slider, label)
                 }
-                
-                updateLabelPosition(slider, label)
             }
         }
     }
@@ -520,7 +538,6 @@ class MainActivity : AppCompatActivity() {
         if (label == null) return
         
         // If the view is effectively hidden (GONE), skip to avoid infinite layout loops.
-        // We check visibility of the view itself.
         if (slider.visibility == View.GONE || label.visibility == View.GONE) return
 
         // Ensure dimensions and layout are ready
@@ -541,36 +558,27 @@ class MainActivity : AppCompatActivity() {
         if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
-        val thumbYInSlider = slider.height - slider.paddingBottom - (normalizedValue * (slider.height - slider.paddingTop - slider.paddingBottom))
-        val thumbYInParent = slider.top + thumbYInSlider
-
-        // Calculate geometric center of text
-        val layout = label.layout
-        val firstLineTop = layout.getLineTop(0).toFloat()
-        val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
-        val textHeight = lastLineBottom - firstLineTop
+        val totalHeight = slider.height.toFloat()
+        val labelHeight = label.height.toFloat()
+        val density = resources.displayMetrics.density
         
-        val contentHeight = label.height - label.paddingTop - label.paddingBottom
-        val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
-        val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
-
-        // Threshold check for bottom proximity (e.g., 30dp from bottom)
-        val density = label.resources.displayMetrics.density
-        val bottomThreshold = 30f * density
-        val isNearBottom = (slider.height - thumbYInSlider) < bottomThreshold
+        // Travel range for the box to stay within visible track
+        // The box top should never go above slider.paddingTop
+        // The box bottom should never go below totalHeight - slider.paddingBottom
+        val limitTop = slider.paddingTop.toFloat()
+        val limitBottom = totalHeight - slider.paddingBottom
+        val availableTravel = limitBottom - limitTop - labelHeight
         
-        label.translationY = 0f
-        if (isNearBottom) {
-            // Place text ABOVE line in WHITE
-            label.setTextColor(Color.WHITE)
-            val textBottomInLabel = layoutTopOffset + lastLineBottom
-            label.translationY = thumbYInParent - (label.top + textBottomInLabel) - 4f * density
-        } else {
-            // Place text BELOW line in BLACK
-            label.setTextColor(Color.BLACK)
-            val textTopInLabel = layoutTopOffset + firstLineTop
-            label.translationY = thumbYInParent - (label.top + textTopInLabel) + 4f * density
-        }
+        // Thumb position within allowed travel
+        val labelTopPos = limitBottom - (normalizedValue * availableTravel) - labelHeight
+        
+        // Apply translation
+        label.translationY = labelTopPos - label.top
+        
+        // Style as text box
+        label.setBackgroundColor(Color.WHITE)
+        label.setTextColor(Color.BLACK)
+        label.elevation = 4f * density
     }
 
     private fun updateTimeConstantLabel(textView: TextView?, coeff: Float) {

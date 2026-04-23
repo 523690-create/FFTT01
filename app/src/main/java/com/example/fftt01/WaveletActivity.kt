@@ -122,6 +122,10 @@ class WaveletActivity : AppCompatActivity() {
         adjustSliderThickness(sliderOrder, txtOrderValue, isNarrow = true)
         adjustSliderThickness(sliderSampling, txtSamplingValue, isNarrow = true)
         adjustSliderThickness(sliderThreshold, txtThresholdValue, isNarrow = true)
+        
+        // Color slider should be yellow
+        sliderColor.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.YELLOW))
+        sliderColor.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#7F7F00")))
         adjustSliderThickness(sliderColor, txtColorValue, isNarrow = true)
     }
 
@@ -132,22 +136,25 @@ class WaveletActivity : AppCompatActivity() {
             if (availableWidth <= 0) return@post
 
             val density = resources.displayMetrics.density
-            val gutterPx = 4f * density
-            // Wavelet sliders are also quite many, so we use a narrower maxThickness by default
-            val maxThickness = (if (isNarrow) 54f else 88f) * density
-            val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
+            
+            label?.let {
+                it.setBackgroundColor(Color.WHITE)
+                it.setTextColor(Color.BLACK)
+                val p = (2f * density).toInt()
+                it.setPadding(p, 0, p, 0)
+                it.elevation = 6f * density
+                it.minWidth = (50f * density).toInt()
+                it.textSize = 10f
+            }
 
-            if (thickness > 0) {
-                slider.trackHeight = thickness.toInt()
-                // Make thumb line across the slide
-                slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
-                
-                label?.let {
-                    val sp = if (thickness < 40f * density) 8f else if (thickness < 60f * density) 10f else 12f
-                    it.textSize = sp
+            slider.post {
+                val labelWidth = label?.width ?: 0
+                if (labelWidth > 0) {
+                    slider.trackHeight = labelWidth
+                    slider.thumbRadius = (2f * density).toInt()
+                    slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
+                    updateLabelPosition(slider, label)
                 }
-                
-                updateLabelPosition(slider, label)
             }
         }
     }
@@ -176,36 +183,25 @@ class WaveletActivity : AppCompatActivity() {
         if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
-        val thumbYInSlider = slider.height - slider.paddingBottom - (normalizedValue * (slider.height - slider.paddingTop - slider.paddingBottom))
-        val thumbYInParent = slider.top + thumbYInSlider
-
-        // Calculate geometric center of text
-        val layout = label.layout
-        val firstLineTop = layout.getLineTop(0).toFloat()
-        val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
-        val textHeight = lastLineBottom - firstLineTop
+        val totalHeight = slider.height.toFloat()
+        val labelHeight = label.height.toFloat()
+        val density = resources.displayMetrics.density
         
-        val contentHeight = label.height - label.paddingTop - label.paddingBottom
-        val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
-        val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
-
-        // Threshold check for bottom proximity (e.g., 30dp from bottom)
-        val density = label.resources.displayMetrics.density
-        val bottomThreshold = 30f * density
-        val isNearBottom = (slider.height - thumbYInSlider) < bottomThreshold
+        // Travel range for the box to stay within visible track
+        val limitTop = slider.paddingTop.toFloat()
+        val limitBottom = totalHeight - slider.paddingBottom
+        val availableTravel = limitBottom - limitTop - labelHeight
         
-        label.translationY = 0f
-        if (isNearBottom) {
-            // Place text ABOVE line in WHITE
-            label.setTextColor(Color.WHITE)
-            val textBottomInLabel = layoutTopOffset + lastLineBottom
-            label.translationY = thumbYInParent - (label.top + textBottomInLabel) - 4f * density
-        } else {
-            // Place text BELOW line in BLACK
-            label.setTextColor(Color.BLACK)
-            val textTopInLabel = layoutTopOffset + firstLineTop
-            label.translationY = thumbYInParent - (label.top + textTopInLabel) + 4f * density
-        }
+        // Thumb position within allowed travel
+        val labelTopPos = limitBottom - (normalizedValue * availableTravel) - labelHeight
+        
+        // Apply translation
+        label.translationY = labelTopPos - label.top
+        
+        // Style as text box
+        label.setBackgroundColor(Color.WHITE)
+        label.setTextColor(Color.BLACK)
+        label.elevation = 4f * density
     }
 
     private fun Slider.setSafeValue(v: Float) {
