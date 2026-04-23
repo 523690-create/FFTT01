@@ -7,6 +7,8 @@ import android.graphics.drawable.Drawable
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import androidx.core.content.edit
+import androidx.core.view.isGone
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -66,9 +68,9 @@ class WaveletActivity : AppCompatActivity() {
 
     private val filterMap = mapOf(
         0 to mapOf( // Daubechies
-            2 to floatArrayOf(0.4829629131445341f, 0.8365163037378077f, 0.2241438680420134f, -0.1294095225512603f),
-            4 to floatArrayOf(0.2303778133088965f, 0.7148465705529154f, 0.6308807679298587f, -0.0279837694168599f, -0.1870348117190931f, 0.0308413818355607f, 0.0328830116668852f, -0.010597401785069f),
-            6 to floatArrayOf(0.1115407433501095f, 0.4946238903984527f, 0.7511339080214068f, 0.3152503505091907f, -0.2262646919654403f, -0.129766867567262f, 0.0975016055873235f, 0.0275228655303057f, -0.0315820393184861f, 0.0005538422011614f, 0.0047772575119451f, -0.10773010853255f)
+            2 to floatArrayOf(0.4829629f, 0.8365163f, 0.22414387f, -0.12940952f),
+            4 to floatArrayOf(0.23037782f, 0.71484655f, 0.6308807f, -0.02798377f, -0.18703482f, 0.03084138f, 0.03288301f, -0.010597401f),
+            6 to floatArrayOf(0.11154074f, 0.4946239f, 0.7511339f, 0.31525035f, -0.2262647f, -0.12976687f, 0.097501605f, 0.027522866f, -0.03158204f, 0.0005538422f, 0.0047772575f, -0.10773011f)
         ),
         1 to mapOf( // Symlets
             2 to floatArrayOf(0.4829629131445341f, 0.8365163037378077f, 0.2241438680420134f, -0.1294095225512603f),
@@ -118,20 +120,20 @@ class WaveletActivity : AppCompatActivity() {
     }
 
     private fun updateAllLabelPositions() {
-        adjustSliderThickness(sliderLevel, txtLevelValue, isNarrow = true)
-        adjustSliderThickness(sliderOrder, txtOrderValue, isNarrow = true)
-        adjustSliderThickness(sliderSampling, txtSamplingValue, isNarrow = true)
-        adjustSliderThickness(sliderThreshold, txtThresholdValue, isNarrow = true)
+        adjustSliderThickness(sliderLevel, txtLevelValue)
+        adjustSliderThickness(sliderOrder, txtOrderValue)
+        adjustSliderThickness(sliderSampling, txtSamplingValue)
+        adjustSliderThickness(sliderThreshold, txtThresholdValue)
         
         // Color slider should be yellow
         sliderColor.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.YELLOW))
         sliderColor.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#7F7F00")))
-        adjustSliderThickness(sliderColor, txtColorValue, isNarrow = true)
+        adjustSliderThickness(sliderColor, txtColorValue)
     }
 
-    private fun adjustSliderThickness(slider: Slider, label: TextView?, isNarrow: Boolean = true) {
+    private fun adjustSliderThickness(slider: Slider, label: TextView?) {
         slider.post {
-            val parent = slider.parent as? android.view.View ?: return@post
+            val parent = (slider.parent as? View) ?: return@post
             val availableWidth = parent.width.toFloat()
             if (availableWidth <= 0) return@post
 
@@ -163,7 +165,7 @@ class WaveletActivity : AppCompatActivity() {
         if (label == null) return
         
         // If the view is effectively hidden (GONE), skip to avoid infinite layout loops.
-        if (slider.visibility == android.view.View.GONE || label.visibility == android.view.View.GONE) return
+        if (slider.isGone || label.isGone) return
 
         // Ensure dimensions and layout are ready
         if (slider.height == 0 || label.height == 0 || label.layout == null) {
@@ -256,14 +258,14 @@ class WaveletActivity : AppCompatActivity() {
             updateUIFromSettings()
             Toast.makeText(this, "Safe mode active: $reason", Toast.LENGTH_LONG).show()
             
-            prefs.edit().apply {
+            prefs.edit {
                 putBoolean("cwt", false)
                 putBoolean("wpt", false)
                 putBoolean("reconstruct", false)
                 putFloat("freq", 11000f)
                 putInt("level", 3)
                 putFloat("threshold", 0.01f)
-            }.apply()
+            }
             
             runDwt()
         }
@@ -289,7 +291,7 @@ class WaveletActivity : AppCompatActivity() {
         txtLevelValue.text = decompositionLevel.toString()
         txtOrderValue.text = waveletOrder.toString()
         txtSamplingValue.text = if (targetFreq >= 1000) "${(targetFreq/1000).toInt()}\nkHz" else "${targetFreq.toInt()}\nHz"
-        txtThresholdValue.text = String.format("%.3f", threshold)
+        txtThresholdValue.text = String.format(java.util.Locale.US, "%.3f", threshold)
         val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
         txtColorValue.text = colorNames[colorSchemeIdx.coerceIn(0, 3)]
 
@@ -436,7 +438,7 @@ class WaveletActivity : AppCompatActivity() {
             if (fromUser) {
                 // Ensure value is a precise multiple of stepSize (0.001) to prevent slider validation crashes
                 threshold = (value * 1000f).roundToInt() / 1000f
-                txtThresholdValue.text = String.format("%.3f", threshold)
+                txtThresholdValue.text = String.format(java.util.Locale.US, "%.3f", threshold)
                 prefs.edit().putFloat("threshold", threshold).apply()
                 updateLabelPosition(s, txtThresholdValue)
                 runDwt()
@@ -538,9 +540,9 @@ class WaveletActivity : AppCompatActivity() {
                             pcmDataArr = pcmDataArr.copyOf(max(pcmDataArr.size * 2, pcmCount + framesToRead))
                         }
                         
-                        for (i in 0 until framesToRead) {
+                        for (unused1 in 0 until framesToRead) {
                             var sum = 0f
-                            for (c in 0 until channels) {
+                            for (unused2 in 0 until channels) {
                                 if (outBuffer.remaining() >= 2) {
                                     sum += outBuffer.short / 32768f
                                 }
@@ -569,10 +571,10 @@ class WaveletActivity : AppCompatActivity() {
                 try {
                     codec?.stop()
                     codec?.release()
-                } catch (e: Exception) {}
+                } catch (unused: Exception) {}
                 try {
                     extractor?.release()
-                } catch (e: Exception) {}
+                } catch (unused: Exception) {}
             }
         }.start()
     }
@@ -617,7 +619,7 @@ class WaveletActivity : AppCompatActivity() {
                 val results = mutableListOf<FloatArray>()
                 var currentSignal = data
                 
-                runOnUiThread { waveletView.setCalculating(true) }
+                runOnUiThread { waveletView.setCalculating(calculating = true) }
 
                 if (isWPT) {
                     var currentLevelNodes = mutableListOf(data)
@@ -836,7 +838,7 @@ class WaveletActivity : AppCompatActivity() {
                 val h = filterMap[selectedFamilyIdx]?.get(waveletOrder) ?: return@Thread
                 val g = getDetailFilter(h)
                 
-                runOnUiThread { waveletView.setCalculating(true) }
+                runOnUiThread { waveletView.setCalculating(calculating = true) }
                 runReconstructInternal(data, h, g, requestId)
             } catch (e: Exception) {
                 runOnUiThread { resetToSafeSettings("Reconstruct error: ${e.message}") }

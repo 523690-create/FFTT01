@@ -15,7 +15,6 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import android.media.MediaRecorder
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -28,6 +27,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.edit
+import androidx.core.view.isGone
 import com.google.android.material.slider.Slider
 import java.io.File
 import java.io.FileOutputStream
@@ -76,14 +77,13 @@ class MainActivity : AppCompatActivity() {
     private var availableDevices = mutableListOf<AudioDeviceInfo>()
     private var isCalibrating = false
     @Volatile private var latestFrameEnergy = 0f
-    private var validFftStartTime: Long = 0
 
     private val audioBufferSize = sampleRate * 3
     private val audioCircularBuffer = FloatArray(audioBufferSize)
     @Volatile private var audioWriteIndex = 0
 
     private val hannWindow = FloatArray(fftSize) { i ->
-        (0.5f * (1 - cos(2 * PI * i / (fftSize - 1)))).toFloat()
+        (0.5f * (1 - cos(2 * PI * i.toDouble() / (fftSize - 1)))).toFloat()
     }
     private lateinit var prefs: SharedPreferences
 
@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        prefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
 
         fftHeatMap = findViewById(R.id.fftHeatMap)
         cropOverlay = findViewById(R.id.cropOverlay)
@@ -273,7 +273,7 @@ class MainActivity : AppCompatActivity() {
                     inputBuffer.clear()
                     
                     val samplesToCopy = min(data.size - sampleIndex, inputBuffer.remaining() / 2)
-                    for (i in 0 until samplesToCopy) {
+                    for (unused in 0 until samplesToCopy) {
                         val s = (data[sampleIndex++] * 32767).toInt().coerceIn(-32768, 32767).toShort()
                         inputBuffer.putShort(s)
                     }
@@ -319,7 +319,7 @@ class MainActivity : AppCompatActivity() {
         colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 fftHeatMap.setColorScheme(position)
-                prefs.edit().putInt("color_scheme", position).apply()
+                prefs.edit { putInt("color_scheme", position) }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
@@ -373,15 +373,15 @@ class MainActivity : AppCompatActivity() {
             val key = "eq_gain_$i"
             val savedGain = prefs.getFloat(key, 0f)
             slider.setSafeValue(savedGain)
-            valueTxt?.text = "${savedGain.toInt()}\ndB"
+            valueTxt?.text = getString(R.string.db_value, savedGain.toInt())
             filters[i].gainDb = savedGain
             filters[i].updateCoefficients()
 
             slider.addOnChangeListener { s, value, _ ->
                 filters[i].gainDb = value
                 filters[i].updateCoefficients()
-                valueTxt?.text = "${value.toInt()}\ndB"
-                prefs.edit().putFloat(key, value).apply()
+                valueTxt?.text = getString(R.string.db_value, value.toInt())
+                prefs.edit { putFloat(key, value) }
                 updateLabelPosition(s, valueTxt)
             }
         }
@@ -395,11 +395,11 @@ class MainActivity : AppCompatActivity() {
         noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
         sliderNoiseFilter.setSafeValue(noiseFilterStrength)
         txtFilterValue?.text = "${(noiseFilterStrength * 100).toInt()}\n%"
-        adjustSliderThickness(sliderNoiseFilter, txtFilterValue, isFilter = true)
+        adjustSliderThickness(sliderNoiseFilter, txtFilterValue)
         sliderNoiseFilter.addOnChangeListener { slider, value, _ ->
             noiseFilterStrength = value
-            txtFilterValue?.text = "${(value * 100).toInt()}\n%"
-            prefs.edit().putFloat("noise_filter_strength", value).apply()
+            txtFilterValue?.text = getString(R.string.percent_value, (value * 100).toInt())
+            prefs.edit { putFloat("noise_filter_strength", value) }
             if (value == 0f) {
                 noiseFloor.fill(0f)
             }
@@ -415,10 +415,10 @@ class MainActivity : AppCompatActivity() {
         val savedRiseMs = prefs.getFloat("noise_filter_rise_ms", 50f).coerceIn(1f, 1000f)
         sliderNoiseRise.setSafeValue(log10(savedRiseMs.toDouble()).toFloat())
         
-        adjustSliderThickness(sliderNoiseRise, txtRiseValue, isFilter = true)
+        adjustSliderThickness(sliderNoiseRise, txtRiseValue)
         sliderNoiseRise.addOnChangeListener { slider, value, _ ->
             val ms = 10.0.pow(value.toDouble()).toFloat()
-            prefs.edit().putFloat("noise_filter_rise_ms", ms).apply()
+            prefs.edit { putFloat("noise_filter_rise_ms", ms) }
             updateCoeffsFromMs()
             updateLabelPosition(slider, txtRiseValue)
         }
@@ -431,10 +431,10 @@ class MainActivity : AppCompatActivity() {
         val savedFallMs = prefs.getFloat("noise_filter_fall_ms", 200f).coerceIn(1f, 1000f)
         sliderNoiseFall.setSafeValue(log10(savedFallMs.toDouble()).toFloat())
         
-        adjustSliderThickness(sliderNoiseFall, txtFallValue, isFilter = true)
+        adjustSliderThickness(sliderNoiseFall, txtFallValue)
         sliderNoiseFall.addOnChangeListener { slider, value, _ ->
             val ms = 10.0.pow(value.toDouble()).toFloat()
-            prefs.edit().putFloat("noise_filter_fall_ms", ms).apply()
+            prefs.edit { putFloat("noise_filter_fall_ms", ms) }
             updateCoeffsFromMs()
             updateLabelPosition(slider, txtFallValue)
         }
@@ -457,8 +457,8 @@ class MainActivity : AppCompatActivity() {
         noiseRiseCoeff = (k / riseMs).coerceIn(0.001f, 1.0f)
         noiseFallCoeff = (k / fallMs).coerceIn(0.001f, 1.0f)
         
-        findViewById<TextView>(R.id.txtRiseValue)?.text = "${riseMs.toInt()}\nms"
-        findViewById<TextView>(R.id.txtFallValue)?.text = "${fallMs.toInt()}\nms"
+        findViewById<TextView>(R.id.txtRiseValue)?.text = getString(R.string.ms_value, riseMs.toInt())
+        findViewById<TextView>(R.id.txtFallValue)?.text = getString(R.string.ms_value, fallMs.toInt())
     }
 
     private fun updateAllLabelPositions() {
@@ -466,9 +466,9 @@ class MainActivity : AppCompatActivity() {
         val txtRiseValue = findViewById<TextView>(R.id.txtRiseValue)
         val txtFallValue = findViewById<TextView>(R.id.txtFallValue)
         
-        adjustSliderThickness(sliderNoiseFilter, txtFilterValue, isFilter = true)
-        adjustSliderThickness(sliderNoiseRise, txtRiseValue, isFilter = true)
-        adjustSliderThickness(sliderNoiseFall, txtFallValue, isFilter = true)
+        adjustSliderThickness(sliderNoiseFilter, txtFilterValue)
+        adjustSliderThickness(sliderNoiseRise, txtRiseValue)
+        adjustSliderThickness(sliderNoiseFall, txtFallValue)
         
         val sliderIds = intArrayOf(R.id.eq100, R.id.eq300, R.id.eq1k, R.id.eq3k, R.id.eq8k)
         val valueTxtIds = intArrayOf(R.id.txtEqValue100, R.id.txtEqValue300, R.id.txtEqValue1k, R.id.txtEqValue3k, R.id.txtEqValue8k)
@@ -479,9 +479,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun adjustSliderThickness(slider: Slider, label: TextView?, isFilter: Boolean = false, isNarrow: Boolean = false) {
+    private fun adjustSliderThickness(slider: Slider, label: TextView?) {
         slider.post {
-            val parent = slider.parent as? android.view.View ?: return@post
+            val parent = slider.parent as? View ?: return@post
             val availableWidth = parent.width.toFloat()
             if (availableWidth <= 0) return@post
 
@@ -518,7 +518,7 @@ class MainActivity : AppCompatActivity() {
         if (label == null) return
         
         // If the view is effectively hidden (GONE), skip to avoid infinite layout loops.
-        if (slider.visibility == View.GONE || label.visibility == View.GONE) return
+        if (slider.isGone || label.isGone) return
 
         // Ensure dimensions and layout are ready
         if (slider.height == 0 || label.height == 0 || label.layout == null) {
