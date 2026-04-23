@@ -6,7 +6,6 @@
     android:background="#000000"
     android:fitsSystemWindows="true">
 
-    <!-- Window 1: FFT Heat Map -->
     <FrameLayout
         android:id="@+id/fftContainer"
         android:layout_width="0dp"
@@ -37,7 +36,6 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.5" />
 
-    <!-- Window 2: Controls and EQ -->
     <LinearLayout
         android:id="@+id/controlsWindow"
         android:layout_width="0dp"
@@ -157,19 +155,20 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/eqContainer"
+            android:id="@+id/sliderContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:weightSum="90">
+            android:weightSum="88">
 
+            <!-- EQ Sliders (5 sliders, each weight 10, plus 4 gutters each weight 1 = total 54) -->
             <LinearLayout
                 android:id="@+id/eqSlidersLayout"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="50"
+                android:layout_weight="54"
                 android:orientation="horizontal"
-                android:weightSum="50">
+                android:weightSum="54">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -188,7 +187,7 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtEqValue100" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtEqValue100" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
                 <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
@@ -210,7 +209,7 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtEqValue300" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtEqValue300" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
                 <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
@@ -232,7 +231,7 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtEqValue1k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtEqValue1k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
                 <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
@@ -254,7 +253,7 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtEqValue3k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtEqValue3k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
                 <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
@@ -276,15 +275,15 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtEqValue8k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtEqValue8k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Double width gutter between EQ and Filter (weight 2) -->
+            <!-- Group separator: Double width gutter (weight 2) -->
             <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="2" />
 
-            <!-- Filter Sliders (3 sliders, each weight 10, total 32 including gutters) -->
+            <!-- Filter Sliders (3 sliders each weight 10, plus 2 gutters each weight 1 = total 32) -->
             <LinearLayout
                 android:id="@+id/filterControlsLayout"
                 android:layout_width="0dp"
@@ -293,13 +292,14 @@
                 android:orientation="horizontal"
                 android:weightSum="32">
 
+                <!-- Filter % -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="10"
                     android:orientation="vertical"
                     android:gravity="center_horizontal">
-                    <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="Filter  Rise   Fall\n%   Time   Time" android:textColor="#00FFFF" android:textSize="7sp" android:textStyle="bold" android:gravity="bottom|center_horizontal" android:paddingBottom="2dp" android:lines="2" android:includeFontPadding="false"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="Filter\n%" android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold" android:gravity="bottom|center_horizontal" android:paddingBottom="2dp" android:lines="2" android:includeFontPadding="false"/>
                     <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                         <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                             android:id="@+id/sliderNoiseFilter"
@@ -310,18 +310,19 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FFFF" app:trackColorInactive="#007F7F"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtFilterValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\n%" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtFilterValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\n%" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
                 <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
 
+                <!-- Rise -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="10"
                     android:orientation="vertical"
                     android:gravity="center_horizontal">
-                    <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:textColor="#00FFFF" android:textSize="7sp" android:textStyle="bold" android:gravity="bottom|center_horizontal" android:paddingBottom="2dp" android:lines="2" android:includeFontPadding="false"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="Rise\nTime" android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold" android:gravity="bottom|center_horizontal" android:paddingBottom="2dp" android:lines="2" android:includeFontPadding="false"/>
                     <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                         <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                             android:id="@+id/sliderNoiseRise"
@@ -332,18 +333,19 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FFFF" app:trackColorInactive="#007F7F"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtRiseValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\nms" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtRiseValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\nms" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
                 <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
 
+                <!-- Fall -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="10"
                     android:orientation="vertical"
                     android:gravity="center_horizontal">
-                    <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:textColor="#00FFFF" android:textSize="7sp" android:textStyle="bold" android:gravity="bottom|center_horizontal" android:paddingBottom="2dp" android:lines="2" android:includeFontPadding="false"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="Fall\nTime" android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold" android:gravity="bottom|center_horizontal" android:paddingBottom="2dp" android:lines="2" android:includeFontPadding="false"/>
                     <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                         <com.google.android.material.slider.Slider app:trackCornerSize="0dp"
                             android:id="@+id/sliderNoiseFall"
@@ -354,10 +356,9 @@
                             app:trackHeight="32dp" app:thumbRadius="16dp" app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FFFF" app:trackColorInactive="#007F7F"
                             android:layout_gravity="center"/>
-                        <TextView android:id="@+id/txtFallValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\nms" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
+                        <TextView android:id="@+id/txtFallValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\nms" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                     </FrameLayout>
                 </LinearLayout>
-
             </LinearLayout>
 
         </LinearLayout>

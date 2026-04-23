@@ -15,6 +15,7 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import android.media.MediaRecorder
 import android.graphics.Color
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -487,27 +488,27 @@ class MainActivity : AppCompatActivity() {
 
             val density = resources.displayMetrics.density
             
+            // Set slider to be invisible but interactive
+            slider.setTrackActiveTintList(ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.setTrackInactiveTintList(ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.setThumbTintList(ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT))
+            
             // Set text box appearance
             label?.let {
                 it.setBackgroundColor(Color.WHITE)
                 it.setTextColor(Color.BLACK)
-                val p = (2f * density).toInt()
-                it.setPadding(p, 0, p, 0) // Keep it tight vertically
                 it.elevation = 6f * density
-                
-                // Ensure width fits longest value
-                it.minWidth = (50f * density).toInt()
-                
-                // Set text size
+                it.minWidth = (40f * density).toInt()
                 it.textSize = 8f
+                it.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+                it.setPadding(0, (2f * density).toInt(), 0, 0)
             }
 
             slider.post {
                 val labelWidth = label?.width ?: 0
                 if (labelWidth > 0) {
                     slider.trackHeight = labelWidth
-                    slider.thumbRadius = (2f * density).toInt() // Small line
-                    slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
                     updateLabelPosition(slider, label)
                 }
             }
@@ -539,26 +540,43 @@ class MainActivity : AppCompatActivity() {
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
         val totalHeight = slider.height.toFloat()
-        val labelHeight = label.height.toFloat()
         val density = resources.displayMetrics.density
         
-        // Travel range for the box to stay within visible track
-        // The box top should never go above slider.paddingTop
-        // The box bottom should never go below totalHeight - slider.paddingBottom
-        val limitTop = slider.paddingTop.toFloat()
-        val limitBottom = totalHeight - slider.paddingBottom
-        val availableTravel = limitBottom - limitTop - labelHeight
+        // Precise thumb center calculation
+        val thumbRadius = slider.thumbRadius.toFloat()
+        val trackTop = slider.paddingTop + thumbRadius
+        val trackBottom = totalHeight - slider.paddingBottom - thumbRadius
+        val trackLength = trackBottom - trackTop
         
-        // Thumb position within allowed travel
-        val labelTopPos = limitBottom - (normalizedValue * availableTravel) - labelHeight
+        val thumbY = trackBottom - (normalizedValue * trackLength)
         
-        // Apply translation
-        label.translationY = labelTopPos - label.top
+        // Bar extends from thumbY down to container bottom
+        val barTopY = thumbY
+        val barBottomY = totalHeight
         
-        // Style as text box
-        label.setBackgroundColor(Color.WHITE)
+        // Align label top with barTopY
+        label.translationY = barTopY - label.top
+        
+        // Set label height to fill the remaining space
+        val targetHeight = (barBottomY - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        if (label.layoutParams.height != targetHeight) {
+            label.layoutParams.height = targetHeight
+            label.requestLayout()
+        }
+
+        // Ensure text stays at top
+        label.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+        label.setPadding(0, (2f * density).toInt(), 0, 0)
+        
+        // Apply theme color
+        val barColor = if (slider.id == R.id.sliderNoiseFilter || slider.id == R.id.sliderNoiseRise || slider.id == R.id.sliderNoiseFall) {
+            Color.CYAN
+        } else {
+            Color.GREEN
+        }
+        label.setBackgroundColor(barColor)
         label.setTextColor(Color.BLACK)
-        label.elevation = 4f * density
+        label.elevation = 6f * density
     }
 
     private fun updateTimeConstantLabel(textView: TextView?, coeff: Float) {

@@ -186,24 +186,44 @@ class WaveletActivity : AppCompatActivity() {
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
         val totalHeight = slider.height.toFloat()
-        val labelHeight = label.height.toFloat()
         val density = resources.displayMetrics.density
         
-        // Travel range for the box to stay within visible track
-        val limitTop = slider.paddingTop.toFloat()
-        val limitBottom = totalHeight - slider.paddingBottom
-        val availableTravel = limitBottom - limitTop - labelHeight
+        // Precise thumb center calculation
+        val thumbRadius = slider.thumbRadius.toFloat()
+        val trackTop = slider.paddingTop + thumbRadius
+        val trackBottom = totalHeight - slider.paddingBottom - thumbRadius
+        val trackLength = trackBottom - trackTop
         
-        // Thumb position within allowed travel
-        val labelTopPos = limitBottom - (normalizedValue * availableTravel) - labelHeight
+        val thumbY = trackBottom - (normalizedValue * trackLength)
         
-        // Apply translation
-        label.translationY = labelTopPos - label.top
+        // Bar extends from thumbY down to container bottom
+        val barTopY = thumbY
+        val barBottomY = totalHeight
         
-        // Style as text box
-        label.setBackgroundColor(Color.WHITE)
+        // Align label top with barTopY
+        label.translationY = barTopY - label.top
+        
+        // Set label height to fill the remaining space
+        val targetHeight = (barBottomY - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        if (label.layoutParams.height != targetHeight) {
+            label.layoutParams.height = targetHeight
+            label.requestLayout()
+        }
+
+        // Ensure text stays at top
+        label.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+        label.setPadding(0, (2f * density).toInt(), 0, 0)
+        
+        // Apply theme color to the bar
+        val barColor = when (slider.id) {
+            R.id.sliderLevel, R.id.sliderOrder -> Color.GREEN
+            R.id.sliderThreshold -> Color.CYAN
+            R.id.sliderColor -> Color.YELLOW
+            else -> Color.LTGRAY // FS slider
+        }
+        label.setBackgroundColor(barColor)
         label.setTextColor(Color.BLACK)
-        label.elevation = 4f * density
+        label.elevation = 6f * density
     }
 
     private fun Slider.setSafeValue(v: Float) {

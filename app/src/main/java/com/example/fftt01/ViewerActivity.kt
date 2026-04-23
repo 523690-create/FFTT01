@@ -15,8 +15,10 @@ import android.os.Bundle
 import android.view.ViewTreeObserver
 import androidx.core.content.edit
 import androidx.core.view.isGone
-import androidx.core.view.isVisible
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.slider.Slider
@@ -27,6 +29,11 @@ import kotlin.concurrent.thread
 class ViewerActivity : AppCompatActivity() {
 
     private lateinit var viewerFft: FFTHeatMapView
+    private lateinit var sizeSpinner: Spinner
+    private lateinit var stepSpinner: Spinner
+    private lateinit var colorSpinner: Spinner
+    private lateinit var sweepSpinner: Spinner
+
     private var mediaPlayer: MediaPlayer? = null
     private var audioTrack: AudioTrack? = null
     private var filePath: String? = null
@@ -64,8 +71,7 @@ class ViewerActivity : AppCompatActivity() {
                 loadAndDecode(File(path))
             }
             // Initial label positioning
-            val root = findViewById<android.view.ViewGroup>(android.R.id.content)
-            root.post {
+            findViewById<android.view.View>(android.R.id.content).post {
                 updateAllLabelPositions()
             }
         }
@@ -83,10 +89,6 @@ class ViewerActivity : AppCompatActivity() {
         adjustSliderThickness(sliderRise, txtRiseValue)
         adjustSliderThickness(sliderFall, txtFallValue)
         
-        val colorSlider = findViewById<Slider>(R.id.vColor)
-        colorSlider.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.YELLOW))
-        colorSlider.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#7F7F00")))
-
         val eqIds = intArrayOf(R.id.vEq100, R.id.vEq300, R.id.vEq1k, R.id.vEq3k, R.id.vEq8k)
         val eqLabels = intArrayOf(R.id.txtEq100Value, R.id.txtEq300Value, R.id.txtEq1kValue, R.id.txtEq3kValue, R.id.txtEq8kValue)
         for (i in eqIds.indices) {
@@ -94,10 +96,6 @@ class ViewerActivity : AppCompatActivity() {
             val label = findViewById<TextView>(eqLabels[i])
             adjustSliderThickness(slider, label)
         }
-        
-        adjustSliderThickness(findViewById(R.id.vFftSize), findViewById(R.id.txtFftSizeValue))
-        adjustSliderThickness(findViewById(R.id.vFftStep), findViewById(R.id.txtFftStepValue))
-        adjustSliderThickness(colorSlider, findViewById(R.id.txtVColorName))
     }
 
     private fun Slider.setSafeValue(v: Float) {
@@ -111,49 +109,13 @@ class ViewerActivity : AppCompatActivity() {
     }
 
     private fun setupControls() {
-        val btnFilter = findViewById<Button>(R.id.btnViewerFilter)
-        val eqLayout = findViewById<android.widget.LinearLayout>(R.id.vEqSlidersLayout)
-        val filterLayout = findViewById<android.widget.LinearLayout>(R.id.vFilterControlsLayout)
-        val txtEqTitle = findViewById<TextView>(R.id.txtViewerEqTitle) // The "EQUALIZER" title
-        val btnSweep = findViewById<Button>(R.id.btnViewerSweep)
-        val sizeSlider = findViewById<Slider>(R.id.vFftSize)
-        val stepSlider = findViewById<Slider>(R.id.vFftStep)
-
-        btnFilter.setOnClickListener {
-            if (eqLayout.isVisible) {
-                eqLayout.visibility = android.view.View.GONE
-                filterLayout.visibility = android.view.View.VISIBLE
-                btnFilter.text = "EQ"
-                txtEqTitle?.text = "FILTER"
-            } else {
-                eqLayout.visibility = android.view.View.VISIBLE
-                filterLayout.visibility = android.view.View.GONE
-                btnFilter.text = "FILTER"
-                txtEqTitle?.text = "EQUALIZER"
-            }
-            updateAllLabelPositions()
-        }
+        sizeSpinner = findViewById(R.id.vSizeSpinner)
+        stepSpinner = findViewById(R.id.vStepSpinner)
+        colorSpinner = findViewById(R.id.vColorSpinner)
+        sweepSpinner = findViewById(R.id.vSweepSpinner)
 
         findViewById<Button>(R.id.btnViewerBack).setOnClickListener { finish() }
         findViewById<Button>(R.id.btnViewerPlay).setOnClickListener { playAudio() }
-        
-        btnSweep.setOnClickListener {
-            isSweepActive = !isSweepActive
-            if (isSweepActive) {
-                btnSweep.text = "SWEEP\nON"
-                btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.RED)
-                sizeSlider.isEnabled = false
-                stepSlider.isEnabled = false
-                runFftSweep()
-            } else {
-                btnSweep.text = "SWEEP\nOFF"
-                btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF69B4"))
-                sizeSlider.isEnabled = true
-                stepSlider.isEnabled = true
-                refreshFft()
-            }
-        }
-
         findViewById<Button>(R.id.btnViewerWavelet).setOnClickListener {
             val intent = Intent(this, WaveletActivity::class.java).apply {
                 putExtra("FILE_PATH", filePath)
@@ -161,6 +123,87 @@ class ViewerActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        setupFftSpinners()
+        setupEqSliders()
+        setupNoiseFilter()
+    }
+
+    private fun setupFftSpinners() {
+        // Size Spinner
+        val sizeAdapter = ArrayAdapter(this, R.layout.spinner_item, fftValues.map { it.toString() })
+        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        sizeSpinner.adapter = sizeAdapter
+        val savedSizeIdx = prefs.getInt("fft_size_idx", 3).coerceIn(0, 4)
+        sizeSpinner.setSelection(savedSizeIdx)
+        currentFftSize = fftValues[savedSizeIdx]
+
+        // Step Spinner
+        val stepAdapter = ArrayAdapter(this, R.layout.spinner_item, fftValues.map { it.toString() })
+        stepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        stepSpinner.adapter = stepAdapter
+        val savedStepIdx = prefs.getInt("fft_step_idx", 2).coerceIn(0, 4)
+        stepSpinner.setSelection(savedStepIdx)
+        currentStepSize = fftValues[savedStepIdx]
+
+        // Color Spinner
+        val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
+        val colorDisplayNames = colorNames.map { "Color:$it" }
+        val colorAdapter = ArrayAdapter(this, R.layout.spinner_item_gold, colorDisplayNames)
+        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        colorSpinner.adapter = colorAdapter
+        val savedColorScheme = prefs.getInt("color_scheme", 0)
+        colorSpinner.setSelection(savedColorScheme)
+        viewerFft.setColorScheme(savedColorScheme)
+
+        // Sweep Spinner
+        val sweepOptions = arrayOf("SWEEP OFF", "SWEEP ON")
+        val sweepAdapter = ArrayAdapter(this, R.layout.spinner_item_orange, sweepOptions)
+        sweepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        sweepSpinner.adapter = sweepAdapter
+        sweepSpinner.setSelection(if (isSweepActive) 1 else 0)
+
+        // Listeners
+        sizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
+                currentFftSize = fftValues[pos]
+                prefs.edit { putInt("fft_size_idx", pos) }
+                triggerRefresh()
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+
+        stepSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
+                currentStepSize = fftValues[pos]
+                prefs.edit { putInt("fft_step_idx", pos) }
+                triggerRefresh()
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+
+        colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
+                viewerFft.setColorScheme(pos)
+                prefs.edit { putInt("color_scheme", pos) }
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+
+        sweepSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
+                val active = pos == 1
+                if (active != isSweepActive) {
+                    isSweepActive = active
+                    sizeSpinner.isEnabled = !isSweepActive
+                    stepSpinner.isEnabled = !isSweepActive
+                    triggerRefresh()
+                }
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+    }
+
+    private fun setupEqSliders() {
         val eqIds = intArrayOf(R.id.vEq100, R.id.vEq300, R.id.vEq1k, R.id.vEq3k, R.id.vEq8k)
         val eqLabels = intArrayOf(R.id.txtEq100Value, R.id.txtEq300Value, R.id.txtEq1kValue, R.id.txtEq3kValue, R.id.txtEq8kValue)
         
@@ -170,7 +213,7 @@ class ViewerActivity : AppCompatActivity() {
             val key = "eq_gain_$i"
             val savedGain = prefs.getFloat(key, 0f)
             slider.setSafeValue(savedGain)
-            txtValue.text = "${slider.value.toInt()}\ndB"
+            txtValue.text = getString(R.string.db_value, slider.value.toInt())
             filters[i].gainDb = slider.value
             filters[i].updateCoefficients()
 
@@ -184,69 +227,6 @@ class ViewerActivity : AppCompatActivity() {
                 updateLabelPosition(s, txtValue)
                 triggerRefresh()
             }
-        }
-
-        setupNoiseFilter()
-
-        val colorSlider = findViewById<Slider>(R.id.vColor)
-        val txtSizeValue = findViewById<TextView>(R.id.txtFftSizeValue)
-        val txtStepValue = findViewById<TextView>(R.id.txtFftStepValue)
-        val txtVColorName = findViewById<TextView>(R.id.txtVColorName)
-
-        adjustSliderThickness(sizeSlider, txtSizeValue)
-        adjustSliderThickness(stepSlider, txtStepValue)
-        adjustSliderThickness(colorSlider, txtVColorName)
-
-        val savedColorScheme = prefs.getInt("color_scheme", 0)
-        viewerFft.setColorScheme(savedColorScheme)
-        colorSlider.setSafeValue(savedColorScheme.toFloat())
-        val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
-        txtVColorName.text = "Color:${colorNames[colorSlider.value.toInt().coerceIn(0, 3)]}"
-        
-        colorSlider.addOnChangeListener { s, value, _ ->
-            val idx = value.toInt()
-            viewerFft.setColorScheme(idx)
-            txtVColorName.text = "Color:${colorNames[idx.coerceIn(0, 3)]}"
-            prefs.edit { putInt("color_scheme", idx) }
-            updateLabelPosition(s, txtVColorName)
-            triggerRefresh()
-        }
-
-        val savedSizeIdx = prefs.getInt("fft_size_idx", 3).coerceIn(0, 4)
-        sizeSlider.setSafeValue(savedSizeIdx.toFloat())
-        currentFftSize = fftValues[sizeSlider.value.toInt()]
-        txtSizeValue.text = currentFftSize.toString()
-        
-        val maxStepIdx = (fftValues.indexOfFirst { it > currentFftSize / 2 } - 1).let { if (it < -1) 4 else if (it == -1) 0 else it }
-        val savedStepIdx = prefs.getInt("fft_step_idx", 2).coerceIn(0, maxStepIdx)
-        stepSlider.setSafeValue(savedStepIdx.toFloat())
-        currentStepSize = fftValues[stepSlider.value.toInt()]
-        txtStepValue.text = currentStepSize.toString()
-
-        sizeSlider.addOnChangeListener { s, value, fromUser ->
-            if (!fromUser) return@addOnChangeListener
-            val idx = value.toInt()
-            currentFftSize = fftValues[idx.coerceIn(0, 4)]
-            txtSizeValue.text = currentFftSize.toString()
-            prefs.edit { putInt("fft_size_idx", idx) }
-            
-            validateStepSlider(sizeSlider, stepSlider)
-            updateLabelPosition(s, txtSizeValue)
-            triggerRefresh()
-        }
-
-        stepSlider.addOnChangeListener { s, value, fromUser ->
-            if (!fromUser) return@addOnChangeListener
-            val maxSIdx = fftValues.indexOf(currentFftSize / 2).coerceAtLeast(0)
-            if (value.toInt() > maxSIdx) {
-                stepSlider.setSafeValue(maxSIdx.toFloat())
-            }
-            val idx = stepSlider.value.toInt()
-            currentStepSize = fftValues[idx]
-            txtStepValue.text = currentStepSize.toString()
-            prefs.edit { putInt("fft_step_idx", idx) }
-            updateLabelPosition(s, txtStepValue)
-            triggerRefresh()
         }
     }
 
@@ -264,7 +244,7 @@ class ViewerActivity : AppCompatActivity() {
 
         noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
         sliderFilter.setSafeValue(noiseFilterStrength)
-        txtFilterValue?.text = "${(noiseFilterStrength * 100).toInt()}\n%"
+        txtFilterValue?.text = getString(R.string.percent_value, (noiseFilterStrength * 100).toInt())
         adjustSliderThickness(sliderFilter, txtFilterValue)
         sliderFilter.addOnChangeListener { slider, value, _ ->
             noiseFilterStrength = value
@@ -328,19 +308,8 @@ class ViewerActivity : AppCompatActivity() {
         txtFallValue?.text = getString(R.string.ms_value, fallMs.toInt())
     }
 
-    private fun validateStepSlider(sizeSlider: Slider, stepSlider: Slider) {
-        val maxStepValue = currentFftSize / 2
-        val maxStepIdx = fftValues.indexOf(maxStepValue).coerceAtLeast(0)
-        if (stepSlider.value.toInt() > maxStepIdx) {
-            stepSlider.setSafeValue(maxStepIdx.toFloat())
-            currentStepSize = fftValues[maxStepIdx]
-            prefs.edit().putInt("fft_step_idx", maxStepIdx).apply()
-        }
-    }
-
-
     private fun loadAndDecode(file: File) {
-        Thread {
+        thread {
             try {
                 val extractor = MediaExtractor()
                 extractor.setDataSource(file.absolutePath)
@@ -394,7 +363,7 @@ class ViewerActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-        }.start()
+        }
     }
 
     private fun refreshFft() {
@@ -643,19 +612,12 @@ class ViewerActivity : AppCompatActivity() {
                             imag[currentFftSize - i] = -imag[i]
                         }
                     }
-                    real[currentFftSize / 2] = 0f // Nyquist usually zeroed or handled
+                    real[currentFftSize / 2] = 0f 
                     imag[currentFftSize / 2] = 0f
 
                     FFTUtils.inverse(real, imag)
 
-                    // Overlap-add could be better, but simple replace for now 
-                    // (since refreshFft also processes blocks with stepSize)
-                    // Note: stepSize vs currentFftSize. 
-                    // If stepSize < fftSize, we have overlap.
                     for (i in 0 until currentFftSize) {
-                        // Very basic window compensation if overlapping
-                        // For simplicity, we'll just write the center part or similar
-                        // or just use the same logic as visualization.
                         if (offset + i < filteredPcm.size) {
                              filteredPcm[offset + i] = real[i]
                         }
@@ -727,22 +689,29 @@ class ViewerActivity : AppCompatActivity() {
 
             val density = resources.displayMetrics.density
             
+            // Set slider to be invisible but interactive
+            slider.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.setThumbTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.setHaloTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
+            
+            // Set text box appearance
             label?.let {
                 it.setBackgroundColor(Color.WHITE)
                 it.setTextColor(Color.BLACK)
                 val p = (2f * density).toInt()
                 it.setPadding(p, 0, p, 0)
                 it.elevation = 6f * density
-                it.minWidth = (50f * density).toInt()
+                it.minWidth = (40f * density).toInt()
                 it.textSize = 8f
+                it.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+                it.setPadding(0, (2f * density).toInt(), 0, 0)
             }
 
             slider.post {
                 val labelWidth = label?.width ?: 0
                 if (labelWidth > 0) {
                     slider.trackHeight = labelWidth
-                    slider.thumbRadius = (2f * density).toInt()
-                    slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
                     updateLabelPosition(slider, label)
                 }
             }
@@ -774,23 +743,42 @@ class ViewerActivity : AppCompatActivity() {
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
         val totalHeight = slider.height.toFloat()
-        val labelHeight = label.height.toFloat()
         val density = resources.displayMetrics.density
         
-        // Travel range for the box to stay within visible track
-        val limitTop = slider.paddingTop.toFloat()
-        val limitBottom = totalHeight - slider.paddingBottom
-        val availableTravel = limitBottom - limitTop - labelHeight
+        // Precise thumb center calculation
+        val thumbRadius = slider.thumbRadius.toFloat()
+        val trackTop = slider.paddingTop + thumbRadius
+        val trackBottom = totalHeight - slider.paddingBottom - thumbRadius
+        val trackLength = trackBottom - trackTop
         
-        // Thumb position within allowed travel
-        val labelTopPos = limitBottom - (normalizedValue * availableTravel) - labelHeight
+        val thumbY = trackBottom - (normalizedValue * trackLength)
         
-        // Apply translation
-        label.translationY = labelTopPos - label.top
+        // Bar extends from thumbY down to container bottom
+        val barTopY = thumbY
+        val barBottomY = totalHeight
         
-        // Style as text box
-        label.setBackgroundColor(Color.WHITE)
+        // Align label top with barTopY
+        label.translationY = barTopY - label.top
+        
+        // Set label height to fill the remaining space
+        val targetHeight = (barBottomY - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        if (label.layoutParams.height != targetHeight) {
+            label.layoutParams.height = targetHeight
+            label.requestLayout()
+        }
+
+        // Ensure text stays at top
+        label.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+        label.setPadding(0, (2f * density).toInt(), 0, 0)
+        
+        // Apply theme color to the bar
+        val barColor = if (slider.id == R.id.vSliderNoiseFilter || slider.id == R.id.vSliderNoiseRise || slider.id == R.id.vSliderNoiseFall) {
+            Color.CYAN
+        } else {
+            Color.GREEN
+        }
+        label.setBackgroundColor(barColor)
         label.setTextColor(Color.BLACK)
-        label.elevation = 4f * density
+        label.elevation = 6f * density
     }
 }

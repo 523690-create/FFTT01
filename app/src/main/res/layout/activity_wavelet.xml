@@ -198,7 +198,7 @@
                         app:trackColorActive="#00FFFF"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtLevelValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="4" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtLevelValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="4" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -226,7 +226,7 @@
                         app:trackColorActive="#00FFFF"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtOrderValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtOrderValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -254,7 +254,7 @@
                         app:trackColorActive="#AAAAAA"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtSamplingValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="44k" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtSamplingValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="44k" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -282,7 +282,7 @@
                         app:trackColorActive="#FF00FF"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtThresholdValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.1" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtThresholdValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.1" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -310,7 +310,7 @@
                         app:trackColorActive="#AAAAAA"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtColorValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Default" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtColorValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Default" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
                 </FrameLayout>
 
             </LinearLayout>
