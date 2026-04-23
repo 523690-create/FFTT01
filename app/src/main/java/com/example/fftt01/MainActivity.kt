@@ -42,19 +42,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fftHeatMap: FFTHeatMapView
     private lateinit var cropOverlay: CropOverlayView
     private lateinit var micSpinner: Spinner
+    private lateinit var colorSpinner: Spinner
     private lateinit var btnSaveInRow: Button
     private lateinit var btnEscInRow: Button
     private lateinit var saveEscContainer: LinearLayout
     private lateinit var mainButtonsLayout: LinearLayout
     private lateinit var micAndColorLayout: LinearLayout
-    private lateinit var btnFilterMode: Button
-    private lateinit var btnEqualizerMode: Button
     private lateinit var eqSlidersLayout: LinearLayout
     private lateinit var filterControlsLayout: LinearLayout
     private lateinit var sliderNoiseFilter: Slider
     private lateinit var sliderNoiseRise: Slider
     private lateinit var sliderNoiseFall: Slider
-    private lateinit var sliderColor: Slider
     private lateinit var btnLatency: Button
 
     private var noiseRiseCoeff = 0.015f
@@ -98,11 +96,10 @@ class MainActivity : AppCompatActivity() {
         fftHeatMap = findViewById(R.id.fftHeatMap)
         cropOverlay = findViewById(R.id.cropOverlay)
         micSpinner = findViewById(R.id.micSpinner)
+        colorSpinner = findViewById(R.id.colorSpinner)
         btnSaveInRow = findViewById(R.id.btnSaveInRow)
         btnEscInRow = findViewById(R.id.btnEscInRow)
         saveEscContainer = findViewById(R.id.saveEscContainer)
-        btnFilterMode = findViewById(R.id.btnFilterMode)
-        btnEqualizerMode = findViewById(R.id.btnEqualizerMode)
         eqSlidersLayout = findViewById(R.id.eqSlidersLayout)
         filterControlsLayout = findViewById(R.id.filterControlsLayout)
         btnLatency = findViewById(R.id.btnLatency)
@@ -113,23 +110,6 @@ class MainActivity : AppCompatActivity() {
         sliderNoiseFilter = findViewById(R.id.sliderNoiseFilter)
         sliderNoiseRise = findViewById(R.id.sliderNoiseRise)
         sliderNoiseFall = findViewById(R.id.sliderNoiseFall)
-        sliderColor = findViewById(R.id.sliderColor)
-
-        btnFilterMode.setOnClickListener {
-            btnFilterMode.visibility = View.GONE
-            btnEqualizerMode.visibility = View.VISIBLE
-            eqSlidersLayout.visibility = View.GONE
-            filterControlsLayout.visibility = View.VISIBLE
-            updateAllLabelPositions()
-        }
-
-        btnEqualizerMode.setOnClickListener {
-            btnEqualizerMode.visibility = View.GONE
-            btnFilterMode.visibility = View.VISIBLE
-            filterControlsLayout.visibility = View.GONE
-            eqSlidersLayout.visibility = View.VISIBLE
-            updateAllLabelPositions()
-        }
 
         btnLatency.setOnClickListener {
             runLatencyMeasurement()
@@ -156,21 +136,7 @@ class MainActivity : AppCompatActivity() {
         
         setupEqSliders()
         setupNoiseFilter()
-
-        val savedColorScheme = prefs.getInt("color_scheme", 0)
-        fftHeatMap.setColorScheme(savedColorScheme)
-        sliderColor.value = savedColorScheme.toFloat()
-        val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
-        val txtColorName = findViewById<TextView>(R.id.txtColorName)
-        txtColorName?.text = colorNames[savedColorScheme.coerceIn(0, 3)]
-
-        sliderColor.addOnChangeListener { slider, value, _ ->
-            val idx = value.toInt()
-            fftHeatMap.setColorScheme(idx)
-            txtColorName?.text = colorNames[idx.coerceIn(0, 3)]
-            prefs.edit().putInt("color_scheme", idx).apply()
-            updateLabelPosition(slider, txtColorName)
-        }
+        setupColorSpinner()
 
         findViewById<android.view.ViewGroup>(android.R.id.content).post {
             updateAllLabelPositions()
@@ -339,9 +305,29 @@ class MainActivity : AppCompatActivity() {
         fos.close()
     }
 
+    private fun setupColorSpinner() {
+        val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
+        val displayNames = colorNames.map { "Color:$it" }
+        val adapter = ArrayAdapter(this, R.layout.spinner_item_gold, displayNames)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        colorSpinner.adapter = adapter
+
+        val savedColorScheme = prefs.getInt("color_scheme", 0)
+        colorSpinner.setSelection(savedColorScheme)
+        fftHeatMap.setColorScheme(savedColorScheme)
+
+        colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                fftHeatMap.setColorScheme(position)
+                prefs.edit().putInt("color_scheme", position).apply()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
     private fun setupMicSpinnerWithDevices(devices: List<AudioDeviceInfo>) {
         val deviceNames = devices.map { it.productName.toString() + " (" + getDeviceTypeName(it.type) + ")" }
-        val adapter = ArrayAdapter(this, R.layout.spinner_item, deviceNames)
+        val adapter = ArrayAdapter(this, R.layout.spinner_item_orange, deviceNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         micSpinner.adapter = adapter
 
@@ -479,16 +465,10 @@ class MainActivity : AppCompatActivity() {
         val txtFilterValue = findViewById<TextView>(R.id.txtFilterValue)
         val txtRiseValue = findViewById<TextView>(R.id.txtRiseValue)
         val txtFallValue = findViewById<TextView>(R.id.txtFallValue)
-        val txtColorName = findViewById<TextView>(R.id.txtColorName)
         
         adjustSliderThickness(sliderNoiseFilter, txtFilterValue, isFilter = true)
         adjustSliderThickness(sliderNoiseRise, txtRiseValue, isFilter = true)
         adjustSliderThickness(sliderNoiseFall, txtFallValue, isFilter = true)
-        
-        // Color slider should be yellow
-        sliderColor.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.YELLOW))
-        sliderColor.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#7F7F00")))
-        adjustSliderThickness(sliderColor, txtColorName)
         
         val sliderIds = intArrayOf(R.id.eq100, R.id.eq300, R.id.eq1k, R.id.eq3k, R.id.eq8k)
         val valueTxtIds = intArrayOf(R.id.txtEqValue100, R.id.txtEqValue300, R.id.txtEqValue1k, R.id.txtEqValue3k, R.id.txtEqValue8k)
@@ -519,7 +499,7 @@ class MainActivity : AppCompatActivity() {
                 it.minWidth = (50f * density).toInt()
                 
                 // Set text size
-                it.textSize = 10f
+                it.textSize = 8f
             }
 
             slider.post {

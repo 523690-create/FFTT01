@@ -198,12 +198,12 @@ class ViewerActivity : AppCompatActivity() {
         viewerFft.setColorScheme(savedColorScheme)
         colorSlider.setSafeValue(savedColorScheme.toFloat())
         val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
-        txtVColorName.text = colorNames[colorSlider.value.toInt().coerceIn(0, 3)]
+        txtVColorName.text = "Color:${colorNames[colorSlider.value.toInt().coerceIn(0, 3)]}"
         
         colorSlider.addOnChangeListener { s, value, _ ->
             val idx = value.toInt()
             viewerFft.setColorScheme(idx)
-            txtVColorName.text = colorNames[idx.coerceIn(0, 3)]
+            txtVColorName.text = "Color:${colorNames[idx.coerceIn(0, 3)]}"
             prefs.edit().putInt("color_scheme", idx).apply()
             updateLabelPosition(s, txtVColorName)
             triggerRefresh()
@@ -735,7 +735,7 @@ class ViewerActivity : AppCompatActivity() {
                 it.setPadding(p, 0, p, 0)
                 it.elevation = 6f * density
                 it.minWidth = (50f * density).toInt()
-                it.textSize = 10f
+                it.textSize = 8f
             }
 
             slider.post {

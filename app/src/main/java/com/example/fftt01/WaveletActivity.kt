@@ -144,7 +144,7 @@ class WaveletActivity : AppCompatActivity() {
                 it.setPadding(p, 0, p, 0)
                 it.elevation = 6f * density
                 it.minWidth = (50f * density).toInt()
-                it.textSize = 10f
+                it.textSize = 8f
             }
 
             slider.post {
