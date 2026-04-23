@@ -199,7 +199,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center_horizontal">
-                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="100\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="100\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="bottom|center_horizontal"/>
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
@@ -230,7 +230,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center_horizontal">
-                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="300\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="300\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="bottom|center_horizontal"/>
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
@@ -261,7 +261,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center_horizontal">
-                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="1k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="1k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="bottom|center_horizontal"/>
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
@@ -292,7 +292,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center_horizontal">
-                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="3k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="3k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="bottom|center_horizontal"/>
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
@@ -323,7 +323,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center_horizontal">
-                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="8k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="center"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="32dp" android:text="8k\nHz" android:textColor="#FFFFFF" android:textSize="12sp" android:gravity="bottom|center_horizontal"/>
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
@@ -386,6 +386,7 @@
                             app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FFFF"
                             app:trackColorInactive="#007F7F"
+                            
                             android:layout_gravity="center"/>
                         <TextView android:id="@+id/txtFilterValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00\n%" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp" android:lineSpacingExtra="-2dp"/>
                     </FrameLayout>
@@ -418,6 +419,7 @@
                             app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FFFF"
                             app:trackColorInactive="#007F7F"
+                            
                             android:layout_gravity="center"/>
                         <TextView android:id="@+id/txtRiseValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00\nms" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp" android:lineSpacingExtra="-2dp"/>
                     </FrameLayout>
@@ -450,6 +452,7 @@
                             app:thumbColor="#FFFFFF"
                             app:trackColorActive="#00FFFF"
                             app:trackColorInactive="#007F7F"
+                            
                             android:layout_gravity="center"/>
                         <TextView android:id="@+id/txtFallValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00\nms" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp" android:lineSpacingExtra="-2dp"/>
                     </FrameLayout>
@@ -488,8 +491,9 @@
                             app:tickVisible="true"
                             app:haloRadius="0dp"
                             app:thumbColor="#FFFFFF"
-                            app:trackColorActive="#AAAAAA"
-                            app:trackColorInactive="#555555"
+                            app:trackColorActive="#FFFF00"
+                            app:trackColorInactive="#7F7F00"
+                            
                             android:layout_gravity="center"/>
                         <TextView android:id="@+id/txtColorName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Default" android:textColor="#000000" android:textSize="14sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
                     </FrameLayout>

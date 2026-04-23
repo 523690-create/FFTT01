@@ -80,6 +80,10 @@ class ViewerActivity : AppCompatActivity() {
         adjustSliderThickness(sliderRise, txtRiseValue, isFilter = true)
         adjustSliderThickness(sliderFall, txtFallValue, isFilter = true)
         
+        val colorSlider = findViewById<Slider>(R.id.vColor)
+        colorSlider.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.YELLOW))
+        colorSlider.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#7F7F00")))
+
         val eqIds = intArrayOf(R.id.vEq100, R.id.vEq300, R.id.vEq1k, R.id.vEq3k, R.id.vEq8k)
         val eqLabels = intArrayOf(R.id.txtEq100Value, R.id.txtEq300Value, R.id.txtEq1kValue, R.id.txtEq3kValue, R.id.txtEq8kValue)
         for (i in eqIds.indices) {
@@ -88,9 +92,9 @@ class ViewerActivity : AppCompatActivity() {
             adjustSliderThickness(slider, label)
         }
         
-        adjustSliderThickness(findViewById(R.id.vFftSize), findViewById(R.id.txtFftSizeValue))
-        adjustSliderThickness(findViewById(R.id.vFftStep), findViewById(R.id.txtFftStepValue))
-        adjustSliderThickness(findViewById(R.id.vColor), findViewById(R.id.txtVColorName))
+        adjustSliderThickness(findViewById(R.id.vFftSize), findViewById(R.id.txtFftSizeValue), isNarrow = true)
+        adjustSliderThickness(findViewById(R.id.vFftStep), findViewById(R.id.txtFftStepValue), isNarrow = true)
+        adjustSliderThickness(colorSlider, findViewById(R.id.txtVColorName))
     }
 
     private fun Slider.setSafeValue(v: Float) {
@@ -133,13 +137,13 @@ class ViewerActivity : AppCompatActivity() {
         btnSweep.setOnClickListener {
             isSweepActive = !isSweepActive
             if (isSweepActive) {
-                btnSweep.text = "SWEEP/ON"
+                btnSweep.text = "SWEEP\nON"
                 btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.RED)
                 sizeSlider.isEnabled = false
                 stepSlider.isEnabled = false
                 runFftSweep()
             } else {
-                btnSweep.text = "SWEEP/OFF"
+                btnSweep.text = "SWEEP\nOFF"
                 btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF69B4"))
                 sizeSlider.isEnabled = true
                 stepSlider.isEnabled = true
@@ -706,7 +710,7 @@ class ViewerActivity : AppCompatActivity() {
         stopAudio()
     }
 
-    private fun adjustSliderThickness(slider: Slider, label: TextView?, isFilter: Boolean = false) {
+    private fun adjustSliderThickness(slider: Slider, label: TextView?, isFilter: Boolean = false, isNarrow: Boolean = false) {
         slider.post {
             val parent = slider.parent as? android.view.View ?: return@post
             val availableWidth = parent.width.toFloat()
@@ -714,12 +718,17 @@ class ViewerActivity : AppCompatActivity() {
 
             val density = resources.displayMetrics.density
             val gutterPx = 4f * density
-            val maxThickness = (if (isFilter) 54f else 88f) * density
+            
+            var maxThicknessBase = if (isFilter) 54f else 88f
+            if (isNarrow) maxThicknessBase *= 0.8f
+            
+            val maxThickness = maxThicknessBase * density
             val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
 
             if (thickness > 0) {
                 slider.trackHeight = thickness.toInt()
-                slider.thumbRadius = (thickness / 2f).toInt()
+                // Make thumb line across the slide
+                slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
                 
                 // Scale text size based on thickness
                 label?.let {
@@ -756,19 +765,10 @@ class ViewerActivity : AppCompatActivity() {
         if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
-        // 1. Determine center of thumb circle (thumbY relative to parent)
-        val thumbRadius = slider.thumbRadius.toFloat()
-        val density = label.resources.displayMetrics.density
-        val edgeMargin = 4f * density 
-        
-        val trackTop = slider.paddingTop + thumbRadius + edgeMargin
-        val trackBottom = slider.height - slider.paddingBottom - thumbRadius - edgeMargin
-        val trackLength = trackBottom - trackTop
-        
-        val thumbYInSlider = trackBottom - (normalizedValue * trackLength)
+        val thumbYInSlider = slider.height - slider.paddingBottom - (normalizedValue * (slider.height - slider.paddingTop - slider.paddingBottom))
         val thumbYInParent = slider.top + thumbYInSlider
 
-        // 2. Determine geometric center of the text (relative to label view)
+        // Calculate geometric center of text
         val layout = label.layout
         val firstLineTop = layout.getLineTop(0).toFloat()
         val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
@@ -778,9 +778,19 @@ class ViewerActivity : AppCompatActivity() {
         val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
         val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
 
-        // 3. Align centers: label.top + translationY + textCenterInLabel = thumbYInParent
-        label.translationY = 0f 
-        val translationNeeded = thumbYInParent - (label.top + textCenterInLabel)
-        label.translationY = translationNeeded
+        val density = label.resources.displayMetrics.density
+        val bottomThreshold = 30f * density
+        val isNearBottom = (slider.height - thumbYInSlider) < bottomThreshold
+        
+        label.translationY = 0f
+        if (isNearBottom) {
+            label.setTextColor(Color.WHITE)
+            val textBottomInLabel = layoutTopOffset + lastLineBottom
+            label.translationY = thumbYInParent - (label.top + textBottomInLabel) - 4f * density
+        } else {
+            label.setTextColor(Color.BLACK)
+            val textTopInLabel = layoutTopOffset + firstLineTop
+            label.translationY = thumbYInParent - (label.top + textTopInLabel) + 4f * density
+        }
     }
 }

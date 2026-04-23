@@ -2,6 +2,8 @@ package com.example.fftt01
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -137,7 +139,8 @@ class WaveletActivity : AppCompatActivity() {
 
             if (thickness > 0) {
                 slider.trackHeight = thickness.toInt()
-                slider.thumbRadius = (thickness / 2f).toInt()
+                // Make thumb line across the slide
+                slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
                 
                 label?.let {
                     val sp = if (thickness < 40f * density) 8f else if (thickness < 60f * density) 10f else 12f
@@ -173,19 +176,10 @@ class WaveletActivity : AppCompatActivity() {
         if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
-        // 1. Determine center of thumb circle (thumbY relative to parent)
-        val thumbRadius = slider.thumbRadius.toFloat()
-        val density = label.resources.displayMetrics.density
-        val edgeMargin = 4f * density 
-        
-        val trackTop = slider.paddingTop + thumbRadius + edgeMargin
-        val trackBottom = slider.height - slider.paddingBottom - thumbRadius - edgeMargin
-        val trackLength = trackBottom - trackTop
-        
-        val thumbYInSlider = trackBottom - (normalizedValue * trackLength)
+        val thumbYInSlider = slider.height - slider.paddingBottom - (normalizedValue * (slider.height - slider.paddingTop - slider.paddingBottom))
         val thumbYInParent = slider.top + thumbYInSlider
 
-        // 2. Determine geometric center of the text (relative to label view)
+        // Calculate geometric center of text
         val layout = label.layout
         val firstLineTop = layout.getLineTop(0).toFloat()
         val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
@@ -195,10 +189,23 @@ class WaveletActivity : AppCompatActivity() {
         val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
         val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
 
-        // 3. Align centers: label.top + translationY + textCenterInLabel = thumbYInParent
-        label.translationY = 0f 
-        val translationNeeded = thumbYInParent - (label.top + textCenterInLabel)
-        label.translationY = translationNeeded
+        // Threshold check for bottom proximity (e.g., 30dp from bottom)
+        val density = label.resources.displayMetrics.density
+        val bottomThreshold = 30f * density
+        val isNearBottom = (slider.height - thumbYInSlider) < bottomThreshold
+        
+        label.translationY = 0f
+        if (isNearBottom) {
+            // Place text ABOVE line in WHITE
+            label.setTextColor(Color.WHITE)
+            val textBottomInLabel = layoutTopOffset + lastLineBottom
+            label.translationY = thumbYInParent - (label.top + textBottomInLabel) - 4f * density
+        } else {
+            // Place text BELOW line in BLACK
+            label.setTextColor(Color.BLACK)
+            val textTopInLabel = layoutTopOffset + firstLineTop
+            label.translationY = thumbYInParent - (label.top + textTopInLabel) + 4f * density
+        }
     }
 
     private fun Slider.setSafeValue(v: Float) {

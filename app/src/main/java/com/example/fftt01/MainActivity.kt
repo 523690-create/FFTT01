@@ -14,6 +14,8 @@ import android.media.AudioTrack
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.media.MediaRecorder
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -469,6 +471,10 @@ class MainActivity : AppCompatActivity() {
         adjustSliderThickness(sliderNoiseFilter, txtFilterValue, isFilter = true)
         adjustSliderThickness(sliderNoiseRise, txtRiseValue, isFilter = true)
         adjustSliderThickness(sliderNoiseFall, txtFallValue, isFilter = true)
+        
+        // Color slider should be yellow
+        sliderColor.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.YELLOW))
+        sliderColor.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#7F7F00")))
         adjustSliderThickness(sliderColor, txtColorName)
         
         val sliderIds = intArrayOf(R.id.eq100, R.id.eq300, R.id.eq1k, R.id.eq3k, R.id.eq8k)
@@ -480,7 +486,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun adjustSliderThickness(slider: Slider, label: TextView?, isFilter: Boolean = false) {
+    private fun adjustSliderThickness(slider: Slider, label: TextView?, isFilter: Boolean = false, isNarrow: Boolean = false) {
         slider.post {
             val parent = slider.parent as? android.view.View ?: return@post
             val availableWidth = parent.width.toFloat()
@@ -488,13 +494,17 @@ class MainActivity : AppCompatActivity() {
 
             val density = resources.displayMetrics.density
             val gutterPx = 4f * density
-            // Reduce max thickness for filters as they are overcrowded
-            val maxThickness = (if (isFilter) 54f else 88f) * density
+            
+            var maxThicknessBase = if (isFilter) 54f else 88f
+            if (isNarrow) maxThicknessBase *= 0.8f
+            
+            val maxThickness = maxThicknessBase * density
             val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
 
             if (thickness > 0) {
                 slider.trackHeight = thickness.toInt()
-                slider.thumbRadius = (thickness / 2f).toInt()
+                // Make thumb line across the slide
+                slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
                 
                 label?.let {
                     val sp = if (thickness < 40f * density) 8f else if (thickness < 60f * density) 10f else 12f
@@ -531,34 +541,36 @@ class MainActivity : AppCompatActivity() {
         if (range <= 0f) return
         val normalizedValue = (slider.value - slider.valueFrom) / range
         
-        // 1. Determine center of thumb circle (thumbY relative to parent)
-        val thumbRadius = slider.thumbRadius.toFloat()
-        val density = label.resources.displayMetrics.density
-        // Material Slider internal track padding: usually thumbRadius + small margin
-        val edgeMargin = 4f * density 
-        
-        val trackTop = slider.paddingTop + thumbRadius + edgeMargin
-        val trackBottom = slider.height - slider.paddingBottom - thumbRadius - edgeMargin
-        val trackLength = trackBottom - trackTop
-        
-        val thumbYInSlider = trackBottom - (normalizedValue * trackLength)
+        val thumbYInSlider = slider.height - slider.paddingBottom - (normalizedValue * (slider.height - slider.paddingTop - slider.paddingBottom))
         val thumbYInParent = slider.top + thumbYInSlider
 
-        // 2. Determine geometric center of the text (relative to label view)
+        // Calculate geometric center of text
         val layout = label.layout
         val firstLineTop = layout.getLineTop(0).toFloat()
         val lastLineBottom = layout.getLineBottom(layout.lineCount - 1).toFloat()
         val textHeight = lastLineBottom - firstLineTop
         
-        // Account for TextView gravity="center" positioning of the layout
         val contentHeight = label.height - label.paddingTop - label.paddingBottom
         val layoutTopOffset = label.paddingTop + (contentHeight - layout.height) / 2f
         val textCenterInLabel = layoutTopOffset + firstLineTop + (textHeight / 2f)
 
-        // 3. Align centers: label.top + translationY + textCenterInLabel = thumbYInParent
-        label.translationY = 0f // Reset for calculation relative to layout position
-        val translationNeeded = thumbYInParent - (label.top + textCenterInLabel)
-        label.translationY = translationNeeded
+        // Threshold check for bottom proximity (e.g., 30dp from bottom)
+        val density = label.resources.displayMetrics.density
+        val bottomThreshold = 30f * density
+        val isNearBottom = (slider.height - thumbYInSlider) < bottomThreshold
+        
+        label.translationY = 0f
+        if (isNearBottom) {
+            // Place text ABOVE line in WHITE
+            label.setTextColor(Color.WHITE)
+            val textBottomInLabel = layoutTopOffset + lastLineBottom
+            label.translationY = thumbYInParent - (label.top + textBottomInLabel) - 4f * density
+        } else {
+            // Place text BELOW line in BLACK
+            label.setTextColor(Color.BLACK)
+            val textTopInLabel = layoutTopOffset + firstLineTop
+            label.translationY = thumbYInParent - (label.top + textTopInLabel) + 4f * density
+        }
     }
 
     private fun updateTimeConstantLabel(textView: TextView?, coeff: Float) {
