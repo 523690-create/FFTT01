@@ -3,7 +3,6 @@ package com.example.fftt01
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -108,7 +107,7 @@ class WaveletActivity : AppCompatActivity() {
         txtThresholdValue = findViewById(R.id.txtThresholdValue)
         txtColorValue = findViewById(R.id.txtColorValue)
 
-        prefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
         loadPrefs()
         setupControls()
 
@@ -198,13 +197,12 @@ class WaveletActivity : AppCompatActivity() {
         
         // Bar extends from thumbY down to container bottom
         val barTopY = thumbY
-        val barBottomY = totalHeight
         
         // Align label top with barTopY
         label.translationY = barTopY - label.top
         
         // Set label height to fill the remaining space
-        val targetHeight = (barBottomY - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast((24f * density).toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()

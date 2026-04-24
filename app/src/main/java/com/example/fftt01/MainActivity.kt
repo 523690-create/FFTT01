@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initAudio() {
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         availableDevices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS).toMutableList()
         setupMicSpinnerWithDevices(availableDevices)
 
@@ -292,7 +292,7 @@ class MainActivity : AppCompatActivity() {
             if (outputBufferIndex >= 0) {
                 val outputBuffer = codec.getOutputBuffer(outputBufferIndex)!!
                 val outData = ByteArray(info.size)
-                outputBuffer.get(outData)
+                outputBuffer.get(outData, 0, info.size)
                 fos.write(outData)
                 codec.releaseOutputBuffer(outputBufferIndex, false)
                 if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -489,10 +489,10 @@ class MainActivity : AppCompatActivity() {
             val density = resources.displayMetrics.density
             
             // Set slider to be invisible but interactive
-            slider.setTrackActiveTintList(ColorStateList.valueOf(Color.TRANSPARENT))
-            slider.setTrackInactiveTintList(ColorStateList.valueOf(Color.TRANSPARENT))
-            slider.setThumbTintList(ColorStateList.valueOf(Color.TRANSPARENT))
-            slider.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.trackActiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            slider.trackInactiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            slider.thumbTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            slider.haloTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             
             // Set text box appearance
             label?.let {
@@ -552,13 +552,12 @@ class MainActivity : AppCompatActivity() {
         
         // Bar extends from thumbY down to container bottom
         val barTopY = thumbY
-        val barBottomY = totalHeight
         
         // Align label top with barTopY
         label.translationY = barTopY - label.top
         
         // Set label height to fill the remaining space
-        val targetHeight = (barBottomY - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast((24f * density).toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()
@@ -590,9 +589,9 @@ class MainActivity : AppCompatActivity() {
         if (recording.get()) return
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return
 
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         if (selectedDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
-            audioManager.startBluetoothSco()
+            audioManager.setCommunicationDevice(selectedDevice!!)
         }
 
         val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT)
@@ -681,9 +680,9 @@ class MainActivity : AppCompatActivity() {
         audioRecord?.stop()
         audioRecord?.release()
         audioRecord = null
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        if (audioManager.isBluetoothScoOn) {
-            audioManager.stopBluetoothSco()
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        if (audioManager.communicationDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
+            audioManager.clearCommunicationDevice()
         }
     }
 

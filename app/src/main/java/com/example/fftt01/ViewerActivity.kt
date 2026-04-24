@@ -130,7 +130,8 @@ class ViewerActivity : AppCompatActivity() {
 
     private fun setupFftSpinners() {
         // Size Spinner
-        val sizeAdapter = ArrayAdapter(this, R.layout.spinner_item, fftValues.map { it.toString() })
+        val sizeDisplayNames = fftValues.map { "FFT Size:\n$it" }
+        val sizeAdapter = ArrayAdapter(this, R.layout.spinner_item_small_gray, sizeDisplayNames)
         sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         sizeSpinner.adapter = sizeAdapter
         val savedSizeIdx = prefs.getInt("fft_size_idx", 3).coerceIn(0, 4)
@@ -138,7 +139,8 @@ class ViewerActivity : AppCompatActivity() {
         currentFftSize = fftValues[savedSizeIdx]
 
         // Step Spinner
-        val stepAdapter = ArrayAdapter(this, R.layout.spinner_item, fftValues.map { it.toString() })
+        val stepDisplayNames = fftValues.map { "FFT Step:\n$it" }
+        val stepAdapter = ArrayAdapter(this, R.layout.spinner_item_small_darkgray, stepDisplayNames)
         stepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         stepSpinner.adapter = stepAdapter
         val savedStepIdx = prefs.getInt("fft_step_idx", 2).coerceIn(0, 4)
@@ -156,8 +158,8 @@ class ViewerActivity : AppCompatActivity() {
         viewerFft.setColorScheme(savedColorScheme)
 
         // Sweep Spinner
-        val sweepOptions = arrayOf("SWEEP OFF", "SWEEP ON")
-        val sweepAdapter = ArrayAdapter(this, R.layout.spinner_item_orange, sweepOptions)
+        val sweepOptions = arrayOf("SWEEP\nOFF", "SWEEP\nON")
+        val sweepAdapter = ArrayAdapter(this, R.layout.spinner_item_small_orange, sweepOptions)
         sweepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         sweepSpinner.adapter = sweepAdapter
         sweepSpinner.setSelection(if (isSweepActive) 1 else 0)
