@@ -60,7 +60,8 @@ class GalleryActivity : AppCompatActivity() {
     }
 
     private fun updateLayoutManager() {
-        if (isGridView) {
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        if (isGridView || isLandscape) {
             recyclerView.layoutManager = GridLayoutManager(this, 3)
             btnViewToggle.setImageResource(R.drawable.ic_view_list)
         } else {
@@ -93,8 +94,9 @@ class GalleryActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val file = files[position]
+            val isLandscape = holder.itemView.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
             
-            if (isGridView) {
+            if (isGridView || isLandscape) {
                 holder.root.orientation = LinearLayout.VERTICAL
                 holder.textView.layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
                 holder.textView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT

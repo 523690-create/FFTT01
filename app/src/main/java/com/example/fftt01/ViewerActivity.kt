@@ -92,16 +92,18 @@ class ViewerActivity : AppCompatActivity() {
         val txtRiseValue = findViewById<TextView>(R.id.vTxtRiseValue)
         val txtFallValue = findViewById<TextView>(R.id.vTxtFallValue)
         
-        adjustSliderThickness(sliderFilter, txtFilterValue)
-        adjustSliderThickness(sliderRise, txtRiseValue)
-        adjustSliderThickness(sliderFall, txtFallValue)
+        if (sliderFilter != null) adjustSliderThickness(sliderFilter, txtFilterValue)
+        if (sliderRise != null) adjustSliderThickness(sliderRise, txtRiseValue)
+        if (sliderFall != null) adjustSliderThickness(sliderFall, txtFallValue)
         
         val eqIds = intArrayOf(R.id.vEq100, R.id.vEq300, R.id.vEq1k, R.id.vEq3k, R.id.vEq8k)
         val eqLabels = intArrayOf(R.id.txtEq100Value, R.id.txtEq300Value, R.id.txtEq1kValue, R.id.txtEq3kValue, R.id.txtEq8kValue)
         for (i in eqIds.indices) {
             val slider = findViewById<Slider>(eqIds[i])
             val label = findViewById<TextView>(eqLabels[i])
-            adjustSliderThickness(slider, label)
+            if (slider != null && label != null) {
+                adjustSliderThickness(slider, label)
+            }
         }
     }
 

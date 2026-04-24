@@ -45,19 +45,21 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var fftHeatMap: FFTHeatMapView
     private lateinit var cropOverlay: CropOverlayView
-    private lateinit var micSpinner: Spinner
-    private lateinit var colorSpinner: Spinner
-    private lateinit var btnSaveInRow: Button
-    private lateinit var btnEscInRow: Button
-    private lateinit var saveEscContainer: LinearLayout
-    private lateinit var mainButtonsLayout: LinearLayout
-    private lateinit var micAndColorLayout: LinearLayout
-    private lateinit var eqSlidersLayout: LinearLayout
-    private lateinit var filterControlsLayout: LinearLayout
-    private lateinit var sliderNoiseFilter: Slider
-    private lateinit var sliderNoiseRise: Slider
-    private lateinit var sliderNoiseFall: Slider
-    private lateinit var btnLatency: Button
+    
+    // Nullable controls for orientation safety
+    private var micSpinner: Spinner? = null
+    private var colorSpinner: Spinner? = null
+    private var btnSaveInRow: Button? = null
+    private var btnEscInRow: Button? = null
+    private var saveEscContainer: View? = null
+    private var mainButtonsLayout: View? = null
+    private var micAndColorLayout: View? = null
+    private var eqSlidersLayout: View? = null
+    private var filterControlsLayout: View? = null
+    private var sliderNoiseFilter: Slider? = null
+    private var sliderNoiseRise: Slider? = null
+    private var sliderNoiseFall: Slider? = null
+    private var btnLatency: Button? = null
 
     private var noiseRiseCoeff = 0.015f
     private var noiseFallCoeff = 0.05f
@@ -96,8 +98,11 @@ class MainActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
 
+        // Core Views (must exist)
         fftHeatMap = findViewById(R.id.fftHeatMap)
         cropOverlay = findViewById(R.id.cropOverlay)
+
+        // Nullable Controls (Safe lookups)
         micSpinner = findViewById(R.id.micSpinner)
         colorSpinner = findViewById(R.id.colorSpinner)
         btnSaveInRow = findViewById(R.id.btnSaveInRow)
@@ -106,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         eqSlidersLayout = findViewById(R.id.eqSlidersLayout)
         filterControlsLayout = findViewById(R.id.filterControlsLayout)
         btnLatency = findViewById(R.id.btnLatency)
-        btnLatency.isAllCaps = false
+        btnLatency?.isAllCaps = false
         
         mainButtonsLayout = findViewById(R.id.mainButtonsLayout)
         micAndColorLayout = findViewById(R.id.micAndColorLayout)
@@ -114,9 +119,7 @@ class MainActivity : AppCompatActivity() {
         sliderNoiseRise = findViewById(R.id.sliderNoiseRise)
         sliderNoiseFall = findViewById(R.id.sliderNoiseFall)
 
-        btnLatency.setOnClickListener {
-            runLatencyMeasurement()
-        }
+        btnLatency?.setOnClickListener { runLatencyMeasurement() }
 
         findViewById<Button>(R.id.btnGallery).setOnClickListener {
             startActivity(Intent(this, GalleryActivity::class.java))
@@ -126,8 +129,8 @@ class MainActivity : AppCompatActivity() {
             showQuitSanityCheck()
         }
 
-        btnSaveInRow.setOnClickListener { saveFragment() }
-        btnEscInRow.setOnClickListener {
+        btnSaveInRow?.setOnClickListener { saveFragment() }
+        btnEscInRow?.setOnClickListener {
             hideFrozenUi()
             fftHeatMap.isFrozen = false
             startRecording()
@@ -139,13 +142,11 @@ class MainActivity : AppCompatActivity() {
         
         setupEqSliders()
         
-        // These controls might be View stubs or invisible in Landscape
         val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         if (!isLandscape) {
             setupNoiseFilter()
             setupColorSpinner()
         } else {
-            // In land, freeze at last portrait values
             noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
             val savedColorScheme = prefs.getInt("color_scheme", 0)
             fftHeatMap.setColorScheme(savedColorScheme)
@@ -195,34 +196,27 @@ class MainActivity : AppCompatActivity() {
         availableDevices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS).toMutableList()
         setupMicSpinnerWithDevices(availableDevices)
 
-        // Sync spinner selection
         selectedDevice?.let { dev ->
             val index = availableDevices.indexOf(dev)
             if (index >= 0) {
-                micSpinner.setSelection(index)
+                micSpinner?.setSelection(index)
             }
         }
 
         startRecording()
     }
 
-
     private fun showFrozenUi() {
-        saveEscContainer.visibility = View.VISIBLE
-        // Only hide if the view actually exists and is not a stub in landscape
-        if (micAndColorLayout.id != -1 && mainButtonsLayout.id != -1) {
-            micAndColorLayout.visibility = View.GONE
-            mainButtonsLayout.visibility = View.GONE
-        }
+        saveEscContainer?.visibility = View.VISIBLE
+        micAndColorLayout?.let { if (it.id != -1) it.visibility = View.GONE }
+        mainButtonsLayout?.let { if (it.id != -1) it.visibility = View.GONE }
         cropOverlay.visibility = View.VISIBLE
     }
 
     private fun hideFrozenUi() {
-        saveEscContainer.visibility = View.GONE
-        if (micAndColorLayout.id != -1 && mainButtonsLayout.id != -1) {
-            micAndColorLayout.visibility = View.VISIBLE
-            mainButtonsLayout.visibility = View.VISIBLE
-        }
+        saveEscContainer?.visibility = View.GONE
+        micAndColorLayout?.let { if (it.id != -1) it.visibility = View.VISIBLE }
+        mainButtonsLayout?.let { if (it.id != -1) it.visibility = View.VISIBLE }
         cropOverlay.visibility = View.GONE
     }
 
@@ -324,17 +318,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupColorSpinner() {
+        val spinner = colorSpinner ?: return
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) return
+
         val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
         val displayNames = colorNames.map { "Color:$it" }
         val adapter = ArrayAdapter(this, R.layout.spinner_item_gold, displayNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        colorSpinner.adapter = adapter
+        spinner.adapter = adapter
 
         val savedColorScheme = prefs.getInt("color_scheme", 0)
-        colorSpinner.setSelection(savedColorScheme)
+        spinner.setSelection(savedColorScheme)
         fftHeatMap.setColorScheme(savedColorScheme)
 
-        colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 fftHeatMap.setColorScheme(position)
                 prefs.edit { putInt("color_scheme", position) }
@@ -344,12 +341,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMicSpinnerWithDevices(devices: List<AudioDeviceInfo>) {
+        val spinner = micSpinner ?: return
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) return
+
         val deviceNames = devices.map { it.productName.toString() + " (" + getDeviceTypeName(it.type) + ")" }
         val adapter = ArrayAdapter(this, R.layout.spinner_item_orange, deviceNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        micSpinner.adapter = adapter
+        spinner.adapter = adapter
 
-        micSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (isCalibrating) return
                 val newDevice = devices[position]
@@ -406,15 +406,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNoiseFilter() {
+        val filter = sliderNoiseFilter ?: return
         val txtFilterValue = findViewById<TextView>(R.id.txtFilterValue)
         val txtRiseValue = findViewById<TextView>(R.id.txtRiseValue)
         val txtFallValue = findViewById<TextView>(R.id.txtFallValue)
 
         noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
-        sliderNoiseFilter.setSafeValue(noiseFilterStrength)
+        filter.setSafeValue(noiseFilterStrength)
         txtFilterValue?.text = "${(noiseFilterStrength * 100).toInt()}\n%"
-        adjustSliderThickness(sliderNoiseFilter, txtFilterValue)
-        sliderNoiseFilter.addOnChangeListener { slider, value, _ ->
+        adjustSliderThickness(filter, txtFilterValue)
+        filter.addOnChangeListener { slider, value, _ ->
             noiseFilterStrength = value
             txtFilterValue?.text = getString(R.string.percent_value, (value * 100).toInt())
             prefs.edit { putFloat("noise_filter_strength", value) }
@@ -424,53 +425,45 @@ class MainActivity : AppCompatActivity() {
             updateLabelPosition(slider, txtFilterValue)
         }
 
-        // Rise: Milliseconds (1 to 1000) Logarithmic
-        // Slider range 0.0 to 3.0 (log10(1) to log10(1000))
-        sliderNoiseRise.valueFrom = 0f
-        sliderNoiseRise.valueTo = 3f
-        sliderNoiseRise.stepSize = 0.01f
-        
-        val savedRiseMs = prefs.getFloat("noise_filter_rise_ms", 50f).coerceIn(1f, 1000f)
-        sliderNoiseRise.setSafeValue(log10(savedRiseMs.toDouble()).toFloat())
-        
-        adjustSliderThickness(sliderNoiseRise, txtRiseValue)
-        sliderNoiseRise.addOnChangeListener { slider, value, _ ->
-            val ms = 10.0.pow(value.toDouble()).toFloat()
-            prefs.edit { putFloat("noise_filter_rise_ms", ms) }
-            updateCoeffsFromMs()
-            updateLabelPosition(slider, txtRiseValue)
+        sliderNoiseRise?.let { sRise ->
+            sRise.valueFrom = 0f
+            sRise.valueTo = 3f
+            sRise.stepSize = 0.01f
+            val savedRiseMs = prefs.getFloat("noise_filter_rise_ms", 50f).coerceIn(1f, 1000f)
+            sRise.setSafeValue(log10(savedRiseMs.toDouble()).toFloat())
+            adjustSliderThickness(sRise, txtRiseValue)
+            sRise.addOnChangeListener { slider, value, _ ->
+                val ms = 10.0.pow(value.toDouble()).toFloat()
+                prefs.edit { putFloat("noise_filter_rise_ms", ms) }
+                updateCoeffsFromMs()
+                updateLabelPosition(slider, txtRiseValue)
+            }
         }
 
-        // Fall: Milliseconds (1 to 1000) Logarithmic
-        sliderNoiseFall.valueFrom = 0f
-        sliderNoiseFall.valueTo = 3f
-        sliderNoiseFall.stepSize = 0.01f
-        
-        val savedFallMs = prefs.getFloat("noise_filter_fall_ms", 200f).coerceIn(1f, 1000f)
-        sliderNoiseFall.setSafeValue(log10(savedFallMs.toDouble()).toFloat())
-        
-        adjustSliderThickness(sliderNoiseFall, txtFallValue)
-        sliderNoiseFall.addOnChangeListener { slider, value, _ ->
-            val ms = 10.0.pow(value.toDouble()).toFloat()
-            prefs.edit { putFloat("noise_filter_fall_ms", ms) }
-            updateCoeffsFromMs()
-            updateLabelPosition(slider, txtFallValue)
+        sliderNoiseFall?.let { sFall ->
+            sFall.valueFrom = 0f
+            sFall.valueTo = 3f
+            sFall.stepSize = 0.01f
+            val savedFallMs = prefs.getFloat("noise_filter_fall_ms", 200f).coerceIn(1f, 1000f)
+            sFall.setSafeValue(log10(savedFallMs.toDouble()).toFloat())
+            adjustSliderThickness(sFall, txtFallValue)
+            sFall.addOnChangeListener { slider, value, _ ->
+                val ms = 10.0.pow(value.toDouble()).toFloat()
+                prefs.edit { putFloat("noise_filter_fall_ms", ms) }
+                updateCoeffsFromMs()
+                updateLabelPosition(slider, txtFallValue)
+            }
         }
 
         updateCoeffsFromMs()
-
-        // Initial label positioning
-        filterControlsLayout.post {
-            updateAllLabelPositions()
-        }
     }
 
     private fun updateCoeffsFromMs() {
         val frameDurationMs = (stepSize.toFloat() / sampleRate) * 1000f
         val k = ln(2.0f) * frameDurationMs
         
-        val riseMs = 10.0.pow(sliderNoiseRise.value.toDouble()).toFloat()
-        val fallMs = 10.0.pow(sliderNoiseFall.value.toDouble()).toFloat()
+        val riseMs = 10.0.pow(sliderNoiseRise?.value?.toDouble() ?: 1.7).toFloat()
+        val fallMs = 10.0.pow(sliderNoiseFall?.value?.toDouble() ?: 2.3).toFloat()
         
         noiseRiseCoeff = (k / riseMs).coerceIn(0.001f, 1.0f)
         noiseFallCoeff = (k / fallMs).coerceIn(0.001f, 1.0f)
@@ -484,9 +477,9 @@ class MainActivity : AppCompatActivity() {
         val txtRiseValue = findViewById<TextView>(R.id.txtRiseValue)
         val txtFallValue = findViewById<TextView>(R.id.txtFallValue)
         
-        adjustSliderThickness(sliderNoiseFilter, txtFilterValue)
-        adjustSliderThickness(sliderNoiseRise, txtRiseValue)
-        adjustSliderThickness(sliderNoiseFall, txtFallValue)
+        sliderNoiseFilter?.let { adjustSliderThickness(it, txtFilterValue) }
+        sliderNoiseRise?.let { adjustSliderThickness(it, txtRiseValue) }
+        sliderNoiseFall?.let { adjustSliderThickness(it, txtFallValue) }
         
         val sliderIds = intArrayOf(R.id.eq100, R.id.eq300, R.id.eq1k, R.id.eq3k, R.id.eq8k)
         val valueTxtIds = intArrayOf(R.id.txtEqValue100, R.id.txtEqValue300, R.id.txtEqValue1k, R.id.txtEqValue3k, R.id.txtEqValue8k)
@@ -507,25 +500,22 @@ class MainActivity : AppCompatActivity() {
             slider.thumbRadius = 0 
             slider.haloRadius = 0
             
-        // Set text box appearance
-        label?.let {
-            it.setBackgroundColor(Color.WHITE)
-            it.setTextColor(Color.BLACK)
-            it.elevation = 6f * density
-            it.minWidth = (40f * density).toInt()
-            it.textSize = 8f
-            it.gravity = android.view.Gravity.CENTER
-            it.setPadding(0, (2f * density).toInt(), 0, 0)
-        }
+            label?.let {
+                it.setBackgroundColor(Color.WHITE)
+                it.setTextColor(Color.BLACK)
+                it.elevation = 6f * density
+                it.minWidth = (40f * density).toInt()
+                it.textSize = 8f
+                it.gravity = android.view.Gravity.CENTER
+                it.setPadding(0, (2f * density).toInt(), 0, 0)
+            }
 
-            // Ensure label is positioned correctly
             updateLabelPosition(slider, label)
         }
     }
 
     private fun updateLabelPosition(slider: Slider, label: TextView?) {
         if (label == null) return
-        
         if (slider.isGone || label.isGone) return
 
         if (slider.height == 0 || label.height == 0 || label.layout == null) {
@@ -548,22 +538,18 @@ class MainActivity : AppCompatActivity() {
         val totalHeight = slider.height.toFloat()
         val density = resources.displayMetrics.density
         
-        // Precise top position mapping
         val handleHeight = 24f * density
         val availableLength = totalHeight - handleHeight
         val barTopY = availableLength - (normalizedValue * availableLength)
         
-        // Align label top with barTopY
         label.translationY = barTopY - label.top
         
-        // Set label height to fill the remaining space down to totalHeight
         val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast(handleHeight.toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()
         }
 
-        // Apply theme color to the bar
         val barColor = if (slider.id == R.id.sliderNoiseFilter || slider.id == R.id.sliderNoiseRise || slider.id == R.id.sliderNoiseFall) {
             Color.CYAN
         } else {
@@ -572,13 +558,6 @@ class MainActivity : AppCompatActivity() {
         label.setBackgroundColor(barColor)
         label.setTextColor(Color.BLACK)
         label.elevation = 6f * density
-    }
-
-    private fun updateTimeConstantLabel(textView: TextView?, coeff: Float) {
-        if (textView == null) return
-        val frameDurationMs = (stepSize.toFloat() / sampleRate) * 1000f
-        val halfLifeMs = if (coeff > 0) (ln(2.0) / coeff * frameDurationMs).toInt() else 0
-        textView.text = "$halfLifeMs\nms"
     }
 
     private fun startRecording() {
@@ -618,20 +597,17 @@ class MainActivity : AppCompatActivity() {
             while (recording.get() && record.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
                 val read = record.read(audioBuffer, 0, stepSize, AudioRecord.READ_BLOCKING)
                 if (read > 0) {
-                    // 1. Apply EQ in time domain
                     for (i in 0 until read) {
                         var s = audioBuffer[i]
                         for (f in filters) s = f.process(s)
                         audioBuffer[i] = s
                     }
 
-                    // 2. Store in circular buffer (efficiently)
                     for (i in 0 until read) {
                         audioCircularBuffer[audioWriteIndex] = audioBuffer[i]
                         audioWriteIndex = (audioWriteIndex + 1) % audioBufferSize
                     }
 
-                    // 3. Prepare FFT input (with overlap)
                     System.arraycopy(fftInput, read, fftInput, 0, fftSize - read)
                     System.arraycopy(audioBuffer, 0, fftInput, fftSize - read, read)
 
@@ -750,7 +726,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 val latencyMs = (maxLag.toFloat() / sampleRate * 1000).toInt()
-                runOnUiThread { btnLatency.text = "Latency ${latencyMs}ms" }
+                runOnUiThread { btnLatency?.text = "Latency ${latencyMs}ms" }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
