@@ -56,6 +56,10 @@ class ViewerActivity : AppCompatActivity() {
     private var noiseFallCoeff = 0.05f
     private var isSweepActive = false
 
+    private val refreshLock = Any()
+    private var refreshCount = 0
+    private var activeThread: Thread? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_viewer)
@@ -233,7 +237,33 @@ class ViewerActivity : AppCompatActivity() {
     }
 
     private fun triggerRefresh() {
-        if (isSweepActive) runFftSweep() else refreshFft()
+        val currentRefresh = synchronized(refreshLock) {
+            refreshCount++
+            refreshCount
+        }
+
+        thread {
+            synchronized(refreshLock) {
+                if (currentRefresh < refreshCount) return@thread
+                activeThread?.interrupt()
+                activeThread = Thread.currentThread()
+            }
+
+            try {
+                if (isSweepActive) runFftSweepInternal(currentRefresh) 
+                else refreshFftInternal(currentRefresh)
+            } catch (e: InterruptedException) {
+                // Task cancelled
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                synchronized(refreshLock) {
+                    if (activeThread == Thread.currentThread()) {
+                        activeThread = null
+                    }
+                }
+            }
+        }
     }
 
     private fun setupNoiseFilter() {
@@ -368,7 +398,7 @@ class ViewerActivity : AppCompatActivity() {
         }
     }
 
-    private fun refreshFft() {
+    private fun refreshFftInternal(refreshId: Int) {
         val pcm = rawPcmData ?: return
         
         // Count number of columns first to set maxHistory for stretching
@@ -379,14 +409,18 @@ class ViewerActivity : AppCompatActivity() {
             countOffset += currentStepSize
         }
         
-        viewerFft.setParams(currentFftSize, sampleRate.toFloat(), currentStepSize)
-        viewerFft.setMaxHistory(columnCount)
-        viewerFft.clearHistory()
-        viewerFft.isFrozen = true
+        runOnUiThread {
+            if (isFinishing || isDestroyed) return@runOnUiThread
+            viewerFft.setParams(currentFftSize, sampleRate.toFloat(), currentStepSize)
+            viewerFft.setMaxHistory(columnCount)
+            viewerFft.clearHistory()
+            viewerFft.isFrozen = true
+        }
 
         for (f in filters) f.reset()
         val filteredPcm = FloatArray(pcm.size)
         for (i in pcm.indices) {
+            if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
             var s = pcm[i]
             for (f in filters) s = f.process(s)
             filteredPcm[i] = s
@@ -403,6 +437,7 @@ class ViewerActivity : AppCompatActivity() {
 
         var offset = 0
         while (offset + currentFftSize <= filteredPcm.size) {
+            if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
             val real = FloatArray(currentFftSize)
             val imag = FloatArray(currentFftSize)
             for (i in 0 until currentFftSize) {
@@ -438,122 +473,133 @@ class ViewerActivity : AppCompatActivity() {
 
         val maxDB = 20 * log10(globalMaxMag + 1e-9f)
         for (mags in allMagnitudes) {
+            if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
             val normalized = FloatArray(mags.size)
             for (i in mags.indices) {
                 val dB = 20 * log10(mags[i] + 1e-9f)
                 normalized[i] = ((dB - (maxDB - 80)) / 80f).coerceIn(0f, 1f)
             }
-            viewerFft.updateFFT(normalized, force = true)
+            runOnUiThread {
+                if (!isFinishing && !isDestroyed) {
+                    viewerFft.updateFFT(normalized, force = true)
+                }
+            }
         }
     }
 
-    private fun runFftSweep() {
+    private fun runFftSweepInternal(refreshId: Int) {
         val pcm = rawPcmData ?: return
         val viewHeight = viewerFft.height
         if (viewHeight <= 0) {
-            viewerFft.post { runFftSweep() }
+            viewerFft.post { triggerRefresh() }
             return
         }
 
-        thread {
-            val sweepSizes = intArrayOf(512, 1024, 2048, 4096)
-            val sweepSteps = intArrayOf(256, 512, 1024, 2048, 4096)
-            
-            val baseStep = 256
-            val baseSize = 512
-            var baseHistory = 0
-            var tempOffset = 0
-            while (tempOffset + baseSize <= pcm.size) {
-                baseHistory++
-                tempOffset += baseStep
+        val sweepSizes = intArrayOf(512, 1024, 2048, 4096)
+        val sweepSteps = intArrayOf(256, 512, 1024, 2048, 4096)
+        
+        val baseStep = 256
+        val baseSize = 512
+        var baseHistory = 0
+        var tempOffset = 0
+        while (tempOffset + baseSize <= pcm.size) {
+            baseHistory++
+            tempOffset += baseStep
+        }
+        if (baseHistory <= 0) return
+
+        val accumulationBuffer = Array(baseHistory) { FloatArray(viewHeight) }
+        
+        // Filter PCM
+        for (f in filters) f.reset()
+        val filteredPcm = FloatArray(pcm.size)
+        for (i in pcm.indices) {
+            if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
+            var s = pcm[i]
+            for (f in filters) s = f.process(s)
+            filteredPcm[i] = s
+        }
+
+        val minFreq = 80f
+        val maxFreq = 10000f
+        val logMin = log10(minFreq)
+        val logMax = log10(maxFreq)
+        
+        var globalMax = 1e-9f
+
+        for (size in sweepSizes) {
+            if (size > filteredPcm.size) continue
+            val hannWindow = FloatArray(size) { i -> 
+                (0.5f * (1 - cos(2 * PI * i / (size - 1)))).toFloat() 
             }
-            if (baseHistory <= 0) return@thread
-
-            val accumulationBuffer = Array(baseHistory) { FloatArray(viewHeight) }
             
-            // Filter PCM
-            for (f in filters) f.reset()
-            val filteredPcm = FloatArray(pcm.size)
-            for (i in pcm.indices) {
-                var s = pcm[i]
-                for (f in filters) s = f.process(s)
-                filteredPcm[i] = s
+            // Precalculate bin mapping for this resolution
+            val mapping = IntArray(viewHeight) { y ->
+                val logF = logMax - (y.toFloat() / viewHeight) * (logMax - logMin)
+                val freq = 10.0.pow(logF.toDouble()).toFloat()
+                (freq * size / sampleRate).toInt().coerceIn(0, size / 2 - 1)
             }
 
-            val minFreq = 80f
-            val maxFreq = 10000f
-            val logMin = log10(minFreq)
-            val logMax = log10(maxFreq)
-            
-            var globalMax = 1e-9f
-
-            for (size in sweepSizes) {
-                if (size > filteredPcm.size) continue
-                val hannWindow = FloatArray(size) { i -> 
-                    (0.5f * (1 - cos(2 * PI * i / (size - 1)))).toFloat() 
-                }
+            for (step in sweepSteps) {
+                if (step > size) continue
                 
-                // Precalculate bin mapping for this resolution
-                val mapping = IntArray(viewHeight) { y ->
-                    val logF = logMax - (y.toFloat() / viewHeight) * (logMax - logMin)
-                    val freq = 10.0.pow(logF.toDouble()).toFloat()
-                    (freq * size / sampleRate).toInt().coerceIn(0, size / 2 - 1)
-                }
+                val noiseFloor = FloatArray(size / 2)
+                var offset = 0
+                while (offset + size <= filteredPcm.size) {
+                    if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
+                    val c = offset / baseStep
+                    if (c >= baseHistory) break
 
-                for (step in sweepSteps) {
-                    if (step > size) continue
-                    
-                    val noiseFloor = FloatArray(size / 2)
-                    var offset = 0
-                    while (offset + size <= filteredPcm.size) {
-                        val c = offset / baseStep
-                        if (c >= baseHistory) break
-
-                        val real = FloatArray(size)
-                        val imag = FloatArray(size)
-                        for (i in 0 until size) {
-                            real[i] = filteredPcm[offset + i] * hannWindow[i]
-                        }
-                        FFTUtils.compute(real, imag)
-                        
-                        val mags = FloatArray(size / 2)
-                        for (i in 0 until size / 2) {
-                            var mag = sqrt(real[i] * real[i] + imag[i] * imag[i])
-                            if (noiseFilterStrength > 0f) {
-                                if (noiseFloor[i] == 0f) noiseFloor[i] = mag
-                                else if (mag < noiseFloor[i]) noiseFloor[i] = noiseFloor[i] * (1f - noiseFallCoeff) + mag * noiseFallCoeff
-                                else noiseFloor[i] = noiseFloor[i] * (1f - noiseRiseCoeff) + mag * noiseRiseCoeff
-                                mag = (mag - noiseFloor[i] * noiseFilterStrength).coerceAtLeast(0f)
-                            }
-                            mags[i] = mag
-                        }
-
-                        for (y in 0 until viewHeight) {
-                            val mag = mags[mapping[y]]
-                            accumulationBuffer[c][y] += mag
-                            if (accumulationBuffer[c][y] > globalMax) globalMax = accumulationBuffer[c][y]
-                        }
-                        
-                        offset += step
+                    val real = FloatArray(size)
+                    val imag = FloatArray(size)
+                    for (i in 0 until size) {
+                        real[i] = filteredPcm[offset + i] * hannWindow[i]
                     }
-                }
-            }
+                    FFTUtils.compute(real, imag)
+                    
+                    val mags = FloatArray(size / 2)
+                    for (i in 0 until size / 2) {
+                        var mag = sqrt(real[i] * real[i] + imag[i] * imag[i])
+                        if (noiseFilterStrength > 0f) {
+                            if (noiseFloor[i] == 0f) noiseFloor[i] = mag
+                            else if (mag < noiseFloor[i]) noiseFloor[i] = noiseFloor[i] * (1f - noiseFallCoeff) + mag * noiseFallCoeff
+                            else noiseFloor[i] = noiseFloor[i] * (1f - noiseRiseCoeff) + mag * noiseRiseCoeff
+                            mag = (mag - noiseFloor[i] * noiseFilterStrength).coerceAtLeast(0f)
+                        }
+                        mags[i] = mag
+                    }
 
-            runOnUiThread {
-                viewerFft.setParams(baseSize, sampleRate.toFloat(), baseStep)
-                viewerFft.setMaxHistory(baseHistory)
-                viewerFft.clearHistory()
-                viewerFft.isFrozen = true
-            }
-            
-            val maxDB = 20 * log10(globalMax + 1e-9f)
-            for (c in 0 until baseHistory) {
-                val normalized = FloatArray(viewHeight)
-                for (y in 0 until viewHeight) {
-                    val dB = 20 * log10(accumulationBuffer[c][y] + 1e-9f)
-                    normalized[y] = ((dB - (maxDB - 80)) / 80f).coerceIn(0f, 1f)
+                    for (y in 0 until viewHeight) {
+                        val mag = mags[mapping[y]]
+                        accumulationBuffer[c][y] += mag
+                        if (accumulationBuffer[c][y] > globalMax) globalMax = accumulationBuffer[c][y]
+                    }
+                    
+                    offset += step
                 }
-                viewerFft.updateFFT(normalized, force = true)
+            }
+        }
+
+        runOnUiThread {
+            if (isFinishing || isDestroyed) return@runOnUiThread
+            viewerFft.setParams(baseSize, sampleRate.toFloat(), baseStep)
+            viewerFft.setMaxHistory(baseHistory)
+            viewerFft.clearHistory()
+            viewerFft.isFrozen = true
+        }
+        
+        val maxDB = 20 * log10(globalMax + 1e-9f)
+        for (c in 0 until baseHistory) {
+            if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
+            val normalized = FloatArray(viewHeight)
+            for (y in 0 until viewHeight) {
+                val dB = 20 * log10(accumulationBuffer[c][y] + 1e-9f)
+                normalized[y] = ((dB - (maxDB - 80)) / 80f).coerceIn(0f, 1f)
+            }
+            runOnUiThread {
+                if (!isFinishing && !isDestroyed) {
+                    viewerFft.updateFFT(normalized, force = true)
+                }
             }
         }
     }
