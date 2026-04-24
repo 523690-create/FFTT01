@@ -16,6 +16,8 @@ import android.media.MediaFormat
 import android.media.MediaRecorder
 import android.graphics.Color
 import android.content.res.ColorStateList
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -120,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, GalleryActivity::class.java))
         }
 
-        findViewById<Button>(R.id.btnQuit).setOnClickListener {
+        findViewById<Button>(R.id.btnQuitTop).setOnClickListener {
             showQuitSanityCheck()
         }
 
@@ -136,8 +138,18 @@ class MainActivity : AppCompatActivity() {
         fftHeatMap.setParams(fftSize, sampleRate.toFloat(), stepSize)
         
         setupEqSliders()
-        setupNoiseFilter()
-        setupColorSpinner()
+        
+        // These controls might be View stubs or invisible in Landscape
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        if (!isLandscape) {
+            setupNoiseFilter()
+            setupColorSpinner()
+        } else {
+            // In land, freeze at last portrait values
+            noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
+            val savedColorScheme = prefs.getInt("color_scheme", 0)
+            fftHeatMap.setColorScheme(savedColorScheme)
+        }
 
         findViewById<android.view.ViewGroup>(android.R.id.content).post {
             updateAllLabelPositions()
@@ -197,15 +209,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun showFrozenUi() {
         saveEscContainer.visibility = View.VISIBLE
-        micAndColorLayout.visibility = View.GONE
-        mainButtonsLayout.visibility = View.GONE
+        // Only hide if the view actually exists and is not a stub in landscape
+        if (micAndColorLayout.id != -1 && mainButtonsLayout.id != -1) {
+            micAndColorLayout.visibility = View.GONE
+            mainButtonsLayout.visibility = View.GONE
+        }
         cropOverlay.visibility = View.VISIBLE
     }
 
     private fun hideFrozenUi() {
         saveEscContainer.visibility = View.GONE
-        micAndColorLayout.visibility = View.VISIBLE
-        mainButtonsLayout.visibility = View.VISIBLE
+        if (micAndColorLayout.id != -1 && mainButtonsLayout.id != -1) {
+            micAndColorLayout.visibility = View.VISIBLE
+            mainButtonsLayout.visibility = View.VISIBLE
+        }
         cropOverlay.visibility = View.GONE
     }
 
@@ -474,54 +491,43 @@ class MainActivity : AppCompatActivity() {
         val sliderIds = intArrayOf(R.id.eq100, R.id.eq300, R.id.eq1k, R.id.eq3k, R.id.eq8k)
         val valueTxtIds = intArrayOf(R.id.txtEqValue100, R.id.txtEqValue300, R.id.txtEqValue1k, R.id.txtEqValue3k, R.id.txtEqValue8k)
         for (i in 0 until 5) {
-            val slider = findViewById<Slider>(sliderIds[i])
-            val label = findViewById<TextView>(valueTxtIds[i])
+            val slider = findViewById<Slider>(sliderIds[i]) ?: continue
+            val label = findViewById<TextView>(valueTxtIds[i]) ?: continue
             adjustSliderThickness(slider, label)
         }
     }
 
     private fun adjustSliderThickness(slider: Slider, label: TextView?) {
         slider.post {
-            val parent = slider.parent as? View ?: return@post
-            val availableWidth = parent.width.toFloat()
-            if (availableWidth <= 0) return@post
-
             val density = resources.displayMetrics.density
             
             // Set slider to be invisible but interactive
             slider.trackActiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             slider.trackInactiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-            slider.thumbTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-            slider.haloTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            slider.thumbRadius = 0 
+            slider.haloRadius = 0
             
-            // Set text box appearance
-            label?.let {
-                it.setBackgroundColor(Color.WHITE)
-                it.setTextColor(Color.BLACK)
-                it.elevation = 6f * density
-                it.minWidth = (40f * density).toInt()
-                it.textSize = 8f
-                it.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
-                it.setPadding(0, (2f * density).toInt(), 0, 0)
-            }
+        // Set text box appearance
+        label?.let {
+            it.setBackgroundColor(Color.WHITE)
+            it.setTextColor(Color.BLACK)
+            it.elevation = 6f * density
+            it.minWidth = (40f * density).toInt()
+            it.textSize = 8f
+            it.gravity = android.view.Gravity.CENTER
+            it.setPadding(0, (2f * density).toInt(), 0, 0)
+        }
 
-            slider.post {
-                val labelWidth = label?.width ?: 0
-                if (labelWidth > 0) {
-                    slider.trackHeight = labelWidth
-                    updateLabelPosition(slider, label)
-                }
-            }
+            // Ensure label is positioned correctly
+            updateLabelPosition(slider, label)
         }
     }
 
     private fun updateLabelPosition(slider: Slider, label: TextView?) {
         if (label == null) return
         
-        // If the view is effectively hidden (GONE), skip to avoid infinite layout loops.
         if (slider.isGone || label.isGone) return
 
-        // Ensure dimensions and layout are ready
         if (slider.height == 0 || label.height == 0 || label.layout == null) {
             label.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
@@ -542,32 +548,22 @@ class MainActivity : AppCompatActivity() {
         val totalHeight = slider.height.toFloat()
         val density = resources.displayMetrics.density
         
-        // Precise thumb center calculation
-        val thumbRadius = slider.thumbRadius.toFloat()
-        val trackTop = slider.paddingTop + thumbRadius
-        val trackBottom = totalHeight - slider.paddingBottom - thumbRadius
-        val trackLength = trackBottom - trackTop
-        
-        val thumbY = trackBottom - (normalizedValue * trackLength)
-        
-        // Bar extends from thumbY down to container bottom
-        val barTopY = thumbY
+        // Precise top position mapping
+        val handleHeight = 24f * density
+        val availableLength = totalHeight - handleHeight
+        val barTopY = availableLength - (normalizedValue * availableLength)
         
         // Align label top with barTopY
         label.translationY = barTopY - label.top
         
-        // Set label height to fill the remaining space
-        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        // Set label height to fill the remaining space down to totalHeight
+        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast(handleHeight.toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()
         }
 
-        // Ensure text stays at top
-        label.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
-        label.setPadding(0, (2f * density).toInt(), 0, 0)
-        
-        // Apply theme color
+        // Apply theme color to the bar
         val barColor = if (slider.id == R.id.sliderNoiseFilter || slider.id == R.id.sliderNoiseRise || slider.id == R.id.sliderNoiseFall) {
             Color.CYAN
         } else {
@@ -591,7 +587,9 @@ class MainActivity : AppCompatActivity() {
 
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         if (selectedDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
-            audioManager.setCommunicationDevice(selectedDevice!!)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                audioManager.setCommunicationDevice(selectedDevice!!)
+            }
         }
 
         val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT)
@@ -682,7 +680,9 @@ class MainActivity : AppCompatActivity() {
         audioRecord = null
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         if (audioManager.communicationDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
-            audioManager.clearCommunicationDevice()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                audioManager.clearCommunicationDevice()
+            }
         }
     }
 

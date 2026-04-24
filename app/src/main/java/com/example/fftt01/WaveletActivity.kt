@@ -1,6 +1,7 @@
 package com.example.fftt01
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.media.MediaCodec
@@ -417,7 +418,16 @@ class WaveletActivity : AppCompatActivity() {
             runDwt()
         }
 
-        findViewById<Button>(R.id.btnWaveletBack).setOnClickListener {
+        findViewById<Button>(R.id.btnWaveletGalleryTop).setOnClickListener {
+            val intent = Intent(this, GalleryActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
+            finish()
+        }
+        findViewById<Button>(R.id.btnWaveletListenTop).setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
             finish()
         }
 

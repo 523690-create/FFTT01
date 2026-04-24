@@ -38,22 +38,13 @@ class FFTHeatMapView @JvmOverloads constructor(
     private var sampleRate = 44100f
     private var fftSize = 2048
     private var stepSize = 1024
+    private var blurRadius = 0
     var isFrozen = false
 
     private var zoomFactorX = 1f
     private var zoomFactorY = 1f
     private var offsetX = 0f
     private var offsetY = 0f
-
-    private val colors = intArrayOf(
-        Color.parseColor("#4B0082"), // Indigo
-        Color.BLUE,
-        Color.CYAN,
-        Color.GREEN,
-        Color.YELLOW,
-        Color.parseColor("#FFA500"), // Orange
-        Color.RED
-    )
 
     private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -199,6 +190,11 @@ class FFTHeatMapView @JvmOverloads constructor(
         precalculateMapping()
     }
 
+    fun setBlur(radius: Int) {
+        blurRadius = radius.coerceIn(0, 10)
+        invalidate()
+    }
+
     fun setMaxHistory(count: Int) {
         maxHistory = count
         resetBitmap()
@@ -214,6 +210,7 @@ class FFTHeatMapView @JvmOverloads constructor(
         if (width > 0 && height > 0) {
             val h = height
             spectrogramBitmap = Bitmap.createBitmap(maxHistory, h, Bitmap.Config.ARGB_8888)
+            currentColumn = 0
             precalculateMapping()
         }
     }
@@ -247,20 +244,33 @@ class FFTHeatMapView @JvmOverloads constructor(
         currentColumn = (currentColumn + 1) % maxHistory
         
         val columnPixels = IntArray(h)
+        
         if (data.size == h) {
-            // 1:1 mapping if data size matches height
+            // Data is already mapped to the heat map height (e.g. from ViewerActivity background thread)
             for (y in 0 until h) {
                 columnPixels[y] = getColorForValue(data[y])
             }
         } else {
-            val mapping = yToBinMapping ?: return
+            // Data is raw frequency bins (e.g. from MainActivity real-time recording)
+            val logMin = log10(minFreq)
+            val logMax = log10(maxFreq)
+            val numBins = data.size
+            
+            // Vertical interpolation for smoother color mapping
             for (y in 0 until h) {
-                val binIdx = mapping[y]
-                if (binIdx < data.size) {
-                    columnPixels[y] = getColorForValue(data[binIdx])
-                } else {
-                    columnPixels[y] = Color.BLACK
-                }
+                val logF = logMax - (y.toFloat() / h) * (logMax - logMin)
+                val freq = 10.0.pow(logF.toDouble()).toFloat()
+                val binIdxExact = (freq * fftSize / sampleRate)
+                
+                val idx1 = binIdxExact.toInt().coerceIn(0, numBins - 1)
+                val idx2 = (idx1 + 1).coerceAtMost(numBins - 1)
+                val frac = binIdxExact - idx1
+                
+                val val1 = data[idx1]
+                val val2 = data[idx2]
+                val interpolatedVal = val1 + (val2 - val1) * frac.toFloat()
+                
+                columnPixels[y] = getColorForValue(interpolatedVal)
             }
         }
         
@@ -322,18 +332,49 @@ class FFTHeatMapView @JvmOverloads constructor(
         canvas.translate(offsetX, offsetY)
         canvas.scale(zoomFactorX, zoomFactorY)
 
+        val paint = Paint().apply {
+            isFilterBitmap = true
+            isAntiAlias = true
+        }
+
         synchronized(bitmap) {
-            if (isFrozen) {
-                canvas.drawBitmap(bitmap, null, RectF(0f, 0f, w, h), null)
-            } else {
-                val splitX = (currentColumn + 1).toFloat() / maxHistory * w
-                val src1 = Rect(currentColumn + 1, 0, maxHistory, bitmap.height)
-                val dst1 = RectF(0f, 0f, w - splitX, h)
-                canvas.drawBitmap(bitmap, src1, dst1, null)
+            if (blurRadius > 0) {
+                // To achieve blur without RenderEffect, we draw at lower resolution into a temporary bitmap
+                // then upscale with bilinear filtering (isFilterBitmap = true).
+                val scale = 1.0f / (blurRadius * 0.5f + 1.0f)
+                val bw = (maxHistory * scale).toInt().coerceAtLeast(10)
+                val bh = (bitmap.height * scale).toInt().coerceAtLeast(10)
                 
-                val src2 = Rect(0, 0, currentColumn + 1, bitmap.height)
-                val dst2 = RectF(w - splitX, 0f, w, h)
-                canvas.drawBitmap(bitmap, src2, dst2, null)
+                val blurredBitmap = Bitmap.createScaledBitmap(bitmap, bw, bh, true)
+                
+                if (isFrozen) {
+                    canvas.drawBitmap(blurredBitmap, null, RectF(0f, 0f, w, h), paint)
+                } else {
+                    val bW = blurredBitmap.width
+                    val drawCol = (currentColumn.toFloat() / maxHistory * bW).toInt()
+                    
+                    val splitX = (drawCol + 1).toFloat() / bW * w
+                    val src1 = Rect(drawCol + 1, 0, bW, blurredBitmap.height)
+                    val dst1 = RectF(0f, 0f, w - splitX, h)
+                    canvas.drawBitmap(blurredBitmap, src1, dst1, paint)
+                    
+                    val src2 = Rect(0, 0, drawCol + 1, blurredBitmap.height)
+                    val dst2 = RectF(w - splitX, 0f, w, h)
+                    canvas.drawBitmap(blurredBitmap, src2, dst2, paint)
+                }
+            } else {
+                if (isFrozen) {
+                    canvas.drawBitmap(bitmap, null, RectF(0f, 0f, w, h), paint)
+                } else {
+                    val splitX = (currentColumn + 1).toFloat() / maxHistory * w
+                    val src1 = Rect(currentColumn + 1, 0, maxHistory, bitmap.height)
+                    val dst1 = RectF(0f, 0f, w - splitX, h)
+                    canvas.drawBitmap(bitmap, src1, dst1, paint)
+                    
+                    val src2 = Rect(0, 0, currentColumn + 1, bitmap.height)
+                    val dst2 = RectF(w - splitX, 0f, w, h)
+                    canvas.drawBitmap(bitmap, src2, dst2, paint)
+                }
             }
         }
         canvas.restore()

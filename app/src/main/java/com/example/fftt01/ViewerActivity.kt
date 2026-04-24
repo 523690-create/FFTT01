@@ -12,6 +12,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.view.View
 import android.view.ViewTreeObserver
 import androidx.core.content.edit
 import androidx.core.view.isGone
@@ -25,6 +26,7 @@ import com.google.android.material.slider.Slider
 import java.io.File
 import kotlin.math.*
 import kotlin.concurrent.thread
+import android.content.res.Configuration
 
 class ViewerActivity : AppCompatActivity() {
 
@@ -32,7 +34,8 @@ class ViewerActivity : AppCompatActivity() {
     private lateinit var sizeSpinner: Spinner
     private lateinit var stepSpinner: Spinner
     private lateinit var colorSpinner: Spinner
-    private lateinit var sweepSpinner: Spinner
+    private lateinit var blurSpinner: Spinner
+    private lateinit var btnSweep: Button
 
     private var mediaPlayer: MediaPlayer? = null
     private var audioTrack: AudioTrack? = null
@@ -116,11 +119,22 @@ class ViewerActivity : AppCompatActivity() {
         sizeSpinner = findViewById(R.id.vSizeSpinner)
         stepSpinner = findViewById(R.id.vStepSpinner)
         colorSpinner = findViewById(R.id.vColorSpinner)
-        sweepSpinner = findViewById(R.id.vSweepSpinner)
+        blurSpinner = findViewById(R.id.vBlurSpinner)
+        btnSweep = findViewById(R.id.btnViewerSweep)
 
-        findViewById<Button>(R.id.btnViewerBack).setOnClickListener { finish() }
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        findViewById<Button>(R.id.btnViewerGalleryTop).setOnClickListener { finish() }
+        findViewById<Button>(R.id.btnViewerListenTop).setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish()
+        }
         findViewById<Button>(R.id.btnViewerPlay).setOnClickListener { playAudio() }
-        findViewById<Button>(R.id.btnViewerWavelet).setOnClickListener {
+        
+        // btnViewerWavelet is optional in landscape (View placeholder used)
+        findViewById<View?>(R.id.btnViewerWavelet)?.setOnClickListener {
             val intent = Intent(this, WaveletActivity::class.java).apply {
                 putExtra("FILE_PATH", filePath)
             }
@@ -128,64 +142,36 @@ class ViewerActivity : AppCompatActivity() {
         }
 
         setupFftSpinners()
+        
+        // Landscape loses sweep, wave, color, blur, and filter capability
+        if (!isLandscape) {
+            setupColorSpinner()
+            setupNoiseFilter()
+            setupBlurSpinner()
+            setupSweepToggle()
+        } else {
+            // Restore saved settings even if controls are hidden
+            val savedColorScheme = prefs.getInt("color_scheme", 0)
+            viewerFft.setColorScheme(savedColorScheme)
+            val savedBlur = prefs.getInt("blur_radius", 0).coerceIn(0, 10)
+            viewerFft.setBlur(savedBlur)
+            
+            // Sweep is always off in land
+            isSweepActive = false
+        }
+        
         setupEqSliders()
-        setupNoiseFilter()
     }
 
-    private fun setupFftSpinners() {
-        // Size Spinner
-        val sizeDisplayNames = fftValues.map { "FFT Size:\n$it" }
-        val sizeAdapter = ArrayAdapter(this, R.layout.spinner_item_small_gray, sizeDisplayNames)
-        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        sizeSpinner.adapter = sizeAdapter
-        val savedSizeIdx = prefs.getInt("fft_size_idx", 3).coerceIn(0, 4)
-        sizeSpinner.setSelection(savedSizeIdx)
-        currentFftSize = fftValues[savedSizeIdx]
-
-        // Step Spinner
-        val stepDisplayNames = fftValues.map { "FFT Step:\n$it" }
-        val stepAdapter = ArrayAdapter(this, R.layout.spinner_item_small_darkgray, stepDisplayNames)
-        stepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        stepSpinner.adapter = stepAdapter
-        val savedStepIdx = prefs.getInt("fft_step_idx", 2).coerceIn(0, 4)
-        stepSpinner.setSelection(savedStepIdx)
-        currentStepSize = fftValues[savedStepIdx]
-
-        // Color Spinner
+    private fun setupColorSpinner() {
         val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
-        val colorDisplayNames = colorNames.map { "Color:$it" }
+        val colorDisplayNames = colorNames.map { getString(R.string.color_prefix, it) }
         val colorAdapter = ArrayAdapter(this, R.layout.spinner_item_gold, colorDisplayNames)
         colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         colorSpinner.adapter = colorAdapter
         val savedColorScheme = prefs.getInt("color_scheme", 0)
         colorSpinner.setSelection(savedColorScheme)
         viewerFft.setColorScheme(savedColorScheme)
-
-        // Sweep Spinner
-        val sweepOptions = arrayOf("SWEEP\nOFF", "SWEEP\nON")
-        val sweepAdapter = ArrayAdapter(this, R.layout.spinner_item_small_orange, sweepOptions)
-        sweepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        sweepSpinner.adapter = sweepAdapter
-        sweepSpinner.setSelection(if (isSweepActive) 1 else 0)
-
-        // Listeners
-        sizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
-                currentFftSize = fftValues[pos]
-                prefs.edit { putInt("fft_size_idx", pos) }
-                triggerRefresh()
-            }
-            override fun onNothingSelected(p0: AdapterView<*>?) {}
-        }
-
-        stepSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
-                currentStepSize = fftValues[pos]
-                prefs.edit { putInt("fft_step_idx", pos) }
-                triggerRefresh()
-            }
-            override fun onNothingSelected(p0: AdapterView<*>?) {}
-        }
 
         colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
@@ -194,14 +180,109 @@ class ViewerActivity : AppCompatActivity() {
             }
             override fun onNothingSelected(p0: AdapterView<*>?) {}
         }
+    }
 
-        sweepSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+    private fun setupSweepToggle() {
+        btnSweep.setOnClickListener {
+            isSweepActive = !isSweepActive
+            updateSweepButtonState()
+            triggerRefresh()
+        }
+        updateSweepButtonState()
+    }
+
+    private fun updateSweepButtonState() {
+        if (isSweepActive) {
+            btnSweep.text = getString(R.string.sweep_on)
+            btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.RED)
+            sizeSpinner.isEnabled = false
+            stepSpinner.isEnabled = false
+        } else {
+            btnSweep.text = getString(R.string.sweep_off)
+            btnSweep.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF69B4"))
+            sizeSpinner.isEnabled = true
+            stepSpinner.isEnabled = true
+        }
+    }
+
+    private fun setupBlurSpinner() {
+        val blurValues = (0..10).toList()
+        val displayNames = blurValues.map { getString(R.string.label_blur, it) }
+        val adapter = ArrayAdapter(this, R.layout.spinner_item_blur, displayNames)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        blurSpinner.adapter = adapter
+        
+        val savedBlur = prefs.getInt("blur_radius", 0).coerceIn(0, 10)
+        blurSpinner.setSelection(savedBlur)
+        viewerFft.setBlur(savedBlur)
+
+        blurSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
-                val active = pos == 1
-                if (active != isSweepActive) {
-                    isSweepActive = active
-                    sizeSpinner.isEnabled = !isSweepActive
-                    stepSpinner.isEnabled = !isSweepActive
+                viewerFft.setBlur(pos)
+                prefs.edit { putInt("blur_radius", pos) }
+                triggerRefresh()
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+    }
+
+    private fun setupFftSpinners() {
+        // Size Spinner
+        val sizeDisplayNames = fftValues.map { getString(R.string.fft_size_prefix, it) }
+        val sizeAdapter = ArrayAdapter(this, R.layout.spinner_item_small_gray, sizeDisplayNames)
+        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        sizeSpinner.adapter = sizeAdapter
+        val savedSizeIdx = prefs.getInt("fft_size_idx", 3).coerceIn(0, fftValues.size - 1)
+        sizeSpinner.setSelection(savedSizeIdx, false)
+        currentFftSize = fftValues[savedSizeIdx]
+
+        // Initialize Step Spinner based on saved Size
+        updateStepSpinner(currentFftSize)
+
+        // Listeners
+        sizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
+                val newSize = fftValues[pos]
+                if (newSize != currentFftSize) {
+                    currentFftSize = newSize
+                    prefs.edit { putInt("fft_size_idx", pos) }
+                    updateStepSpinner(currentFftSize)
+                    triggerRefresh()
+                }
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+    }
+
+    private fun updateStepSpinner(selectedSize: Int) {
+        // Filter options: Step <= Size / 2
+        val maxAllowedStep = selectedSize / 2
+        val validSteps = fftValues.filter { it <= maxAllowedStep }
+        
+        // If no values from our standard set are valid (e.g. Size=256), we must allow at least one smaller step.
+        // But since fftValues starts at 256, 256/2 = 128 is valid. I'll ensure 128 is handled if needed.
+        val finalSteps = if (validSteps.isEmpty()) listOf(selectedSize / 2) else validSteps
+
+        val stepDisplayNames = finalSteps.map { getString(R.string.fft_step_prefix, it) }
+        val stepAdapter = ArrayAdapter(this, R.layout.spinner_item_small_darkgray, stepDisplayNames)
+        stepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        
+        // Important: preserve selection if possible, otherwise clamp
+        val oldStep = currentStepSize
+        stepSpinner.adapter = stepAdapter
+        
+        val newSelection = finalSteps.indexOf(oldStep).coerceAtLeast(0)
+        stepSpinner.setSelection(newSelection, false)
+        currentStepSize = finalSteps[newSelection]
+
+        stepSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: android.view.View?, pos: Int, p3: Long) {
+                val newStep = finalSteps[pos]
+                if (newStep != currentStepSize) {
+                    currentStepSize = newStep
+                    // Save index relative to standard fftValues for simplicity if it exists, otherwise just save value
+                    val globalIdx = fftValues.indexOf(newStep)
+                    if (globalIdx != -1) prefs.edit { putInt("fft_step_idx", globalIdx) }
                     triggerRefresh()
                 }
             }
@@ -400,15 +481,21 @@ class ViewerActivity : AppCompatActivity() {
 
     private fun refreshFftInternal(refreshId: Int) {
         val pcm = rawPcmData ?: return
+        val viewHeight = viewerFft.height
+        if (viewHeight <= 0) {
+            viewerFft.post { triggerRefresh() }
+            return
+        }
         
-        // Count number of columns first to set maxHistory for stretching
+        // Count number of columns first
         var columnCount = 0
         var countOffset = 0
         while (countOffset + currentFftSize <= pcm.size) {
             columnCount++
             countOffset += currentStepSize
         }
-        
+        if (columnCount <= 0) return
+
         runOnUiThread {
             if (isFinishing || isDestroyed) return@runOnUiThread
             viewerFft.setParams(currentFftSize, sampleRate.toFloat(), currentStepSize)
@@ -417,6 +504,10 @@ class ViewerActivity : AppCompatActivity() {
             viewerFft.isFrozen = true
         }
 
+        // Accumulation buffer for standard FFT
+        val accumulationBuffer = Array(columnCount) { FloatArray(viewHeight) }
+
+        // Filter PCM
         for (f in filters) f.reset()
         val filteredPcm = FloatArray(pcm.size)
         for (i in pcm.indices) {
@@ -430,12 +521,23 @@ class ViewerActivity : AppCompatActivity() {
             (0.5f * (1 - cos(2 * PI * i / (currentFftSize - 1)))).toFloat()
         }
 
-        val allMagnitudes = mutableListOf<FloatArray>()
-        var globalMaxMag = 1e-9f
+        val minFreq = 80f
+        val maxFreq = 10000f
+        val logMin = log10(minFreq)
+        val logMax = log10(maxFreq)
+        
+        // Precalculate mapping
+        val mapping = IntArray(viewHeight) { y ->
+            val logF = logMax - (y.toFloat() / viewHeight) * (logMax - logMin)
+            val freq = 10.0.pow(logF.toDouble()).toFloat()
+            (freq * currentFftSize / sampleRate).toInt().coerceIn(0, currentFftSize / 2 - 1)
+        }
 
+        var globalMax = 1e-9f
         val noiseFloor = FloatArray(currentFftSize / 2)
 
         var offset = 0
+        var c = 0
         while (offset + currentFftSize <= filteredPcm.size) {
             if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
             val real = FloatArray(currentFftSize)
@@ -446,38 +548,36 @@ class ViewerActivity : AppCompatActivity() {
             
             FFTUtils.compute(real, imag)
             
-            val magnitudes = FloatArray(currentFftSize / 2)
+            val mags = FloatArray(currentFftSize / 2)
             for (i in 0 until currentFftSize / 2) {
                 var mag = sqrt(real[i] * real[i] + imag[i] * imag[i])
 
                 if (noiseFilterStrength > 0f) {
-                    if (noiseFloor[i] == 0f) {
-                        noiseFloor[i] = mag
-                    } else {
-                        if (mag < noiseFloor[i]) {
-                            noiseFloor[i] = noiseFloor[i] * (1f - noiseFallCoeff) + mag * noiseFallCoeff
-                        } else {
-                            noiseFloor[i] = noiseFloor[i] * (1f - noiseRiseCoeff) + mag * noiseRiseCoeff
-                        }
-                    }
-                    val reduction = noiseFloor[i] * noiseFilterStrength
-                    mag = (mag - reduction).coerceAtLeast(0f)
+                    if (noiseFloor[i] == 0f) noiseFloor[i] = mag
+                    else if (mag < noiseFloor[i]) noiseFloor[i] = noiseFloor[i] * (1f - noiseFallCoeff) + mag * noiseFallCoeff
+                    else noiseFloor[i] = noiseFloor[i] * (1f - noiseRiseCoeff) + mag * noiseRiseCoeff
+                    mag = (mag - noiseFloor[i] * noiseFilterStrength).coerceAtLeast(0f)
                 }
-
-                magnitudes[i] = mag
-                if (mag > globalMaxMag) globalMaxMag = mag
+                mags[i] = mag
             }
-            allMagnitudes.add(magnitudes)
+
+            for (y in 0 until viewHeight) {
+                val mag = mags[mapping[y]]
+                accumulationBuffer[c][y] = mag
+                if (mag > globalMax) globalMax = mag
+            }
+
             offset += currentStepSize
+            c++
         }
 
-        val maxDB = 20 * log10(globalMaxMag + 1e-9f)
-        for (mags in allMagnitudes) {
+        val maxDB = 20 * log10(globalMax + 1e-9f)
+        for (idx in 0 until columnCount) {
             if (Thread.interrupted() || refreshId < refreshCount) throw InterruptedException()
-            val normalized = FloatArray(mags.size)
-            for (i in mags.indices) {
-                val dB = 20 * log10(mags[i] + 1e-9f)
-                normalized[i] = ((dB - (maxDB - 80)) / 80f).coerceIn(0f, 1f)
+            val normalized = FloatArray(viewHeight)
+            for (y in 0 until viewHeight) {
+                val dB = 20 * log10(accumulationBuffer[idx][y] + 1e-9f)
+                normalized[y] = ((dB - (maxDB - 80)) / 80f).coerceIn(0f, 1f)
             }
             runOnUiThread {
                 if (!isFinishing && !isDestroyed) {
@@ -743,18 +843,16 @@ class ViewerActivity : AppCompatActivity() {
             slider.setThumbTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
             slider.setHaloTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
             
-            // Set text box appearance
-            label?.let {
-                it.setBackgroundColor(Color.WHITE)
-                it.setTextColor(Color.BLACK)
-                val p = (2f * density).toInt()
-                it.setPadding(p, 0, p, 0)
-                it.elevation = 6f * density
-                it.minWidth = (40f * density).toInt()
-                it.textSize = 8f
-                it.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
-                it.setPadding(0, (2f * density).toInt(), 0, 0)
-            }
+        // Set text box appearance
+        label?.let {
+            it.setBackgroundColor(Color.WHITE)
+            it.setTextColor(Color.BLACK)
+            it.elevation = 6f * density
+            it.minWidth = (40f * density).toInt()
+            it.textSize = 8f
+            it.gravity = android.view.Gravity.CENTER
+            it.setPadding(0, (2f * density).toInt(), 0, 0)
+        }
 
             slider.post {
                 val labelWidth = label?.width ?: 0
@@ -803,13 +901,12 @@ class ViewerActivity : AppCompatActivity() {
         
         // Bar extends from thumbY down to container bottom
         val barTopY = thumbY
-        val barBottomY = totalHeight
         
         // Align label top with barTopY
         label.translationY = barTopY - label.top
         
         // Set label height to fill the remaining space
-        val targetHeight = (barBottomY - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast((18f * density).toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()

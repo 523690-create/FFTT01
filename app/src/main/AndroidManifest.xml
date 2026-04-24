@@ -17,7 +17,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/title_listening">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -26,15 +27,18 @@
 
         <activity
             android:name=".GalleryActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:label="@string/title_gallery" />
 
         <activity
             android:name=".ViewerActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:label="@string/title_analysis" />
 
         <activity
             android:name=".WaveletActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:label="@string/title_wavelet" />
 
         <activity
             android:name=".LatencyActivity"

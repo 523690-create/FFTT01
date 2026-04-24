@@ -4,260 +4,176 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
+    <!-- Sidebar for controls: Left side -->
+    <LinearLayout
+        android:id="@+id/vSidebar"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/viewerFft"
+        app:layout_constraintHorizontal_weight="0.4"
+        android:clipChildren="false">
+
+        <TextView
+            android:id="@+id/vTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/title_analysis"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+            <Button
+                android:id="@+id/btnViewerGalleryTop"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="@string/btn_gallery"
+                android:backgroundTint="#FFFF00"
+                android:textColor="#000000"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="4dp"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+            <Button
+                android:id="@+id/btnViewerListenTop"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="LISTEN"
+                android:backgroundTint="#00FFFF"
+                android:textColor="#000000"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+        </LinearLayout>
+
+        <!-- Play/Wave (Wave should be invisible per user instructions to lose wave capability in land analysis) -->
+        <Button
+            android:id="@+id/btnViewerPlay"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="@string/btn_play"
+            android:backgroundTint="#90EE90"
+            android:textColor="#000000"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:id="@+id/fftParamsRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+            <Spinner
+                android:id="@+id/vSizeSpinner"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent" />
+            <Spinner
+                android:id="@+id/vStepSpinner"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/vSliderContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:weightSum="54"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- EQ Sliders Only -->
+            <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="10" android:orientation="vertical" android:clipChildren="false" android:clipToPadding="false">
+                <TextView android:layout_width="wrap_content" android:layout_height="0dp" android:layout_weight="0.3" android:text="@string/label_100hz" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="bottom|center_horizontal"/>
+                <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.7" android:clipChildren="false" android:clipToPadding="false">
+                    <com.google.android.material.slider.Slider android:id="@+id/vEq100" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="24dp" app:thumbRadius="12dp" app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"/>
+                    <TextView android:id="@+id/txtEq100Value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_0db" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
+                </FrameLayout>
+            </LinearLayout>
+            <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="10" android:orientation="vertical" android:clipChildren="false" android:clipToPadding="false">
+                <TextView android:layout_width="wrap_content" android:layout_height="0dp" android:layout_weight="0.3" android:text="@string/label_300hz" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="bottom|center_horizontal"/>
+                <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.7" android:clipChildren="false" android:clipToPadding="false">
+                    <com.google.android.material.slider.Slider android:id="@+id/vEq300" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="24dp" app:thumbRadius="12dp" app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"/>
+                    <TextView android:id="@+id/txtEq300Value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_0db" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
+                </FrameLayout>
+            </LinearLayout>
+            <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="10" android:orientation="vertical" android:clipChildren="false" android:clipToPadding="false">
+                <TextView android:layout_width="wrap_content" android:layout_height="0dp" android:layout_weight="0.3" android:text="@string/label_1khz" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="bottom|center_horizontal"/>
+                <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.7" android:clipChildren="false" android:clipToPadding="false">
+                    <com.google.android.material.slider.Slider android:id="@+id/vEq1k" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="24dp" app:thumbRadius="12dp" app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"/>
+                    <TextView android:id="@+id/txtEq1kValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_0db" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
+                </FrameLayout>
+            </LinearLayout>
+            <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="10" android:orientation="vertical" android:clipChildren="false" android:clipToPadding="false">
+                <TextView android:layout_width="wrap_content" android:layout_height="0dp" android:layout_weight="0.3" android:text="@string/label_3khz" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="bottom|center_horizontal"/>
+                <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.7" android:clipChildren="false" android:clipToPadding="false">
+                    <com.google.android.material.slider.Slider android:id="@+id/vEq3k" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="24dp" app:thumbRadius="12dp" app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"/>
+                    <TextView android:id="@+id/txtEq3kValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_0db" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
+                </FrameLayout>
+            </LinearLayout>
+            <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="10" android:orientation="vertical" android:clipChildren="false" android:clipToPadding="false">
+                <TextView android:layout_width="wrap_content" android:layout_height="0dp" android:layout_weight="0.3" android:text="@string/label_8khz" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="bottom|center_horizontal"/>
+                <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.7" android:clipChildren="false" android:clipToPadding="false">
+                    <com.google.android.material.slider.Slider android:id="@+id/vEq8k" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="24dp" app:thumbRadius="12dp" app:trackColorActive="#00FF00" app:trackColorInactive="#007F00"/>
+                    <TextView android:id="@+id/txtEq8kValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_0db" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="top|center_horizontal" android:elevation="4dp"/>
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Hidden controls in land analysis -->
+        <View android:id="@+id/vCustomToolbar" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/vTopControlsRow1" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/vColorSpinner" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/vBlurSpinner" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/btnViewerSweep" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/btnViewerWavelet" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/vFilterControlsLayout" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/vSliderNoiseFilter" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/vSliderNoiseRise" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+        <View android:id="@+id/vSliderNoiseFall" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+
+    </LinearLayout>
+
+    <!-- Map Area: Right side, Square 1:1 -->
     <com.example.fftt01.FFTHeatMapView
         android:id="@+id/viewerFft"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#111111"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/viewerGuideline"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintDimensionRatio="1:1" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/viewerGuideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.4" />
-
-    <LinearLayout
-        android:id="@+id/viewerControls"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:padding="4dp"
-        android:background="#222222"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/viewerGuideline"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintHorizontal_weight="0.6" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:orientation="horizontal"
-            android:weightSum="5"
-            android:layout_marginBottom="4dp">
-
-            <Button
-                android:id="@+id/btnViewerBack"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="ESC"
-                android:backgroundTint="#FFA500"
-                android:textColor="#000000"
-                android:layout_margin="1dp"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                android:padding="0dp" />
-
-            <Button
-                android:id="@+id/btnViewerPlay"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="PLAY"
-                android:backgroundTint="#90EE90"
-                android:textColor="#000000"
-                android:layout_margin="1dp"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                android:padding="0dp" />
-
-            <Button
-                android:id="@+id/btnViewerFilter"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="FILTER"
-                android:backgroundTint="#0000FF"
-                android:textColor="#FFFFFF"
-                android:layout_margin="1dp"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                android:padding="0dp" />
-
-            <Button
-                android:id="@+id/btnViewerSweep"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="SWEEP\nOFF"
-                android:backgroundTint="#FF69B4"
-                android:textColor="#FFFFFF"
-                android:layout_margin="1dp"
-                android:maxLines="2"
-                android:textSize="7sp"
-                android:textStyle="bold"
-                android:padding="0dp" />
-
-            <Button
-                android:id="@+id/btnViewerWavelet"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="WAVE"
-                android:backgroundTint="#FFFF00"
-                android:textColor="#000000"
-                android:layout_margin="1dp"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                android:padding="0dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:weightSum="8">
-
-            <!-- EQ Group -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="4.5"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="EQUALIZER"
-                    android:textColor="#FFFFFF"
-                    android:textSize="8sp"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal"
-                        android:weightSum="5">
-                        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                            <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="100" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="center"/>
-                            <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                                <com.google.android.material.slider.Slider android:id="@+id/vEq100" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:tickVisible="true" android:stepSize="10.0" app:trackHeight="88dp" app:thumbRadius="44dp" app:thumbColor="#FFFFFF" app:trackColorActive="#00FFFF" app:trackColorInactive="#333333" android:layout_gravity="center"/>
-                                <TextView android:id="@+id/txtEq100Value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
-                            </FrameLayout>
-                        </LinearLayout>
-                        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                            <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="300" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="center"/>
-                            <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                                <com.google.android.material.slider.Slider android:id="@+id/vEq300" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:tickVisible="true" android:stepSize="10.0" app:trackHeight="88dp" app:thumbRadius="44dp" app:thumbColor="#FFFFFF" app:trackColorActive="#00FFFF" app:trackColorInactive="#333333" android:layout_gravity="center"/>
-                                <TextView android:id="@+id/txtEq300Value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
-                            </FrameLayout>
-                        </LinearLayout>
-                        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                            <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="1k" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="center"/>
-                            <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                                <com.google.android.material.slider.Slider android:id="@+id/vEq1k" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:tickVisible="true" android:stepSize="10.0" app:trackHeight="88dp" app:thumbRadius="44dp" app:thumbColor="#FFFFFF" app:trackColorActive="#00FFFF" app:trackColorInactive="#333333" android:layout_gravity="center"/>
-                                <TextView android:id="@+id/txtEq1kValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
-                            </FrameLayout>
-                        </LinearLayout>
-                        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                            <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="3k" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="center"/>
-                            <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                                <com.google.android.material.slider.Slider android:id="@+id/vEq3k" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:tickVisible="true" android:stepSize="10.0" app:trackHeight="88dp" app:thumbRadius="44dp" app:thumbColor="#FFFFFF" app:trackColorActive="#00FFFF" app:trackColorInactive="#333333" android:layout_gravity="center"/>
-                                <TextView android:id="@+id/txtEq3kValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
-                            </FrameLayout>
-                        </LinearLayout>
-                        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                            <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="8k" android:textColor="#FFFFFF" android:textSize="8sp" android:gravity="center"/>
-                            <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                                <com.google.android.material.slider.Slider android:id="@+id/vEq8k" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="-40.0" android:valueTo="40.0" android:value="0.0" android:orientation="vertical" app:labelBehavior="gone" app:tickVisible="true" android:stepSize="10.0" app:trackHeight="88dp" app:thumbRadius="44dp" app:thumbColor="#FFFFFF" app:trackColorActive="#00FFFF" app:trackColorInactive="#333333" android:layout_gravity="center"/>
-                                <TextView android:id="@+id/txtEq8kValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0\ndB" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:gravity="center" android:layout_gravity="center" android:elevation="4dp"/>
-                            </FrameLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-
-            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#444444" android:layout_marginHorizontal="2dp"/>
-
-            <!-- FFT Group -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="2.5"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="FFT"
-                    android:textColor="#FFFFFF"
-                    android:textSize="8sp"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal"
-                        android:weightSum="2">
-                        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                            <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="SIZE" android:textColor="#FFFFFF" android:textSize="8sp" android:textStyle="bold" android:gravity="center"/>
-                            <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                                <com.google.android.material.slider.Slider android:id="@+id/vFftSize" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="0.0" android:valueTo="4.0" android:value="3.0" android:stepSize="1.0" android:orientation="vertical" app:labelBehavior="gone" app:tickVisible="true" app:trackHeight="88dp" app:thumbRadius="44dp" app:thumbColor="#FFFFFF" app:trackColorActive="#AAAAAA" app:trackColorInactive="#333333" android:layout_gravity="center"/>
-                                <TextView android:id="@+id/txtFftSizeValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2048" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
-                            </FrameLayout>
-                        </LinearLayout>
-                        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                            <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="STEP" android:textColor="#FFFFFF" android:textSize="8sp" android:textStyle="bold" android:gravity="center"/>
-                            <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                                <com.google.android.material.slider.Slider android:id="@+id/vFftStep" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="0.0" android:valueTo="4.0" android:value="2.0" android:stepSize="1.0" android:orientation="vertical" app:labelBehavior="gone" app:tickVisible="true" app:trackHeight="88dp" app:thumbRadius="44dp" app:thumbColor="#FFFFFF" app:trackColorActive="#AAAAAA" app:trackColorInactive="#333333" android:layout_gravity="center"/>
-                                <TextView android:id="@+id/txtFftStepValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1024" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
-                            </FrameLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-
-            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#444444" android:layout_marginHorizontal="2dp"/>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="16dp" android:text="COLOR" android:textColor="#FFFFFF" android:textSize="8sp" android:textStyle="bold" android:gravity="center"/>
-                <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/vColor"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:valueFrom="0.0"
-                        android:valueTo="3.0"
-                        android:value="0.0"
-                        android:stepSize="1.0"
-                        android:orientation="vertical"
-                        app:labelBehavior="gone"
-                        app:trackHeight="88dp"
-                        app:thumbRadius="44dp"
-                        app:thumbColor="#FFFFFF"
-                        app:trackColorActive="#AAAAAA"
-                        app:trackColorInactive="#333333"
-                        android:layout_gravity="center"/>
-                    <TextView android:id="@+id/txtVColorName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Def" android:textColor="#000000" android:textSize="8sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
-                </FrameLayout>
-            </LinearLayout>
-
-        </LinearLayout>
-    </LinearLayout>
+    <!-- Placeholder gutters/guidelines -->
+    <View android:id="@+id/gutter1" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <View android:id="@+id/gutter2" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <View android:id="@+id/viewerGuideline" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
