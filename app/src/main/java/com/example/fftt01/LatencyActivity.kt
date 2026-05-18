@@ -53,19 +53,23 @@ class LatencyActivity : AppCompatActivity() {
                     AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT).coerceAtLeast(bufferSize * 4)
                 )
 
-                val player = AudioTrack.Builder()
-                    .setAudioAttributes(AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build())
-                    .setAudioFormat(AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
-                        .setSampleRate(sampleRate)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                        .build())
-                    .setBufferSizeInBytes(chirp.size * 4)
-                    .setTransferMode(AudioTrack.MODE_STATIC)
+                val attributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build()
+                val format = AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
+                    .setSampleRate(sampleRate)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build()
+
+                val player = AudioTrack(
+                    attributes,
+                    format,
+                    chirp.size * 4,
+                    AudioTrack.MODE_STATIC,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
+                )
 
                 player.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
 

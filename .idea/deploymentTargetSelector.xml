@@ -3,11 +3,11 @@
   <component name="deploymentTargetSelector">
     <selectionStates>
       <SelectionState runConfigName="app">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-04-25T11:18:53.955630100Z">
+        <option name="selectionMode" value="DIALOG" />
+        <DropdownSelection timestamp="2026-05-18T18:40:18.467500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\A B\.android\avd\Pixel_3a_XL.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\523oc\.android\avd\Pixel.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,30 +15,16 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\A B\.android\avd\Medium_Tablet.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\523oc\.android\avd\Pixel_9_Pro_XL.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\A B\.android\avd\Pixel_10_Pro_XL.avd" />
-              </handle>
-            </Target>
-            <Target type="DEFAULT_BOOT">
-              <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\A B\.android\avd\Pixel_3a_XL.avd" />
-              </handle>
-            </Target>
-            <Target type="DEFAULT_BOOT">
-              <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\A B\.android\avd\Small_Phone.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\523oc\.android\avd\Pixel_3a_XL.avd" />
               </handle>
             </Target>
           </targets>
         </DialogSelection>
-      </SelectionState>
-      <SelectionState runConfigName="New Run Config">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DialogSelection />
       </SelectionState>
     </selectionStates>
   </component>

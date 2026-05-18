@@ -192,15 +192,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initAudio() {
-        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        availableDevices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS).toMutableList()
-        setupMicSpinnerWithDevices(availableDevices)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+            availableDevices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS).toMutableList()
+            setupMicSpinnerWithDevices(availableDevices)
 
-        selectedDevice?.let { dev ->
-            val index = availableDevices.indexOf(dev)
-            if (index >= 0) {
-                micSpinner?.setSelection(index)
+            selectedDevice?.let { dev ->
+                val index = availableDevices.indexOf(dev)
+                if (index >= 0) {
+                    micSpinner?.setSelection(index)
+                }
             }
+        } else {
+            micSpinner?.visibility = View.GONE
         }
 
         startRecording()
@@ -565,8 +569,8 @@ class MainActivity : AppCompatActivity() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return
 
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        if (selectedDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (selectedDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
                 audioManager.setCommunicationDevice(selectedDevice!!)
             }
         }
@@ -582,7 +586,9 @@ class MainActivity : AppCompatActivity() {
             bufferSize
         )
         
-        selectedDevice?.let { record.setPreferredDevice(it) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            selectedDevice?.let { record.setPreferredDevice(it) }
+        }
         
         audioRecord = record
         recording.set(true)
@@ -654,9 +660,9 @@ class MainActivity : AppCompatActivity() {
         audioRecord?.stop()
         audioRecord?.release()
         audioRecord = null
-        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        if (audioManager.communicationDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+            if (audioManager.communicationDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
                 audioManager.clearCommunicationDevice()
             }
         }
@@ -685,19 +691,23 @@ class MainActivity : AppCompatActivity() {
         Thread {
             var player: AudioTrack? = null
             try {
-                player = AudioTrack.Builder()
-                    .setAudioAttributes(AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build())
-                    .setAudioFormat(AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
-                        .setSampleRate(sampleRate)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                        .build())
-                    .setBufferSizeInBytes(chirp.size * 4)
-                    .setTransferMode(AudioTrack.MODE_STATIC)
+                val attributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build()
+                val format = AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
+                    .setSampleRate(sampleRate)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build()
+                
+                player = AudioTrack(
+                    attributes,
+                    format,
+                    chirp.size * 4,
+                    AudioTrack.MODE_STATIC,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
+                )
 
                 player.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
                 val captureSize = sampleRate

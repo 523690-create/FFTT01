@@ -19,9 +19,9 @@ class WaveletView @JvmOverloads constructor(
     private val paint = Paint()
     private val textPaint = Paint().apply {
         color = Color.WHITE
-        textSize = 24f
+        textSize = 10f * context.resources.displayMetrics.density
         isAntiAlias = true
-        setShadowLayer(2f, 1f, 1f, Color.BLACK)
+        setShadowLayer(2f * context.resources.displayMetrics.density, 1f * context.resources.displayMetrics.density, 1f * context.resources.displayMetrics.density, Color.BLACK)
     }
     
     private val progressPaint = Paint().apply {

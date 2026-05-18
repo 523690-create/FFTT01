@@ -18,14 +18,14 @@ class FFTHeatMapView @JvmOverloads constructor(
 
     private val linePaint = Paint().apply {
         color = Color.BLACK
-        strokeWidth = 3f
+        strokeWidth = 2f * context.resources.displayMetrics.density
         style = Paint.Style.STROKE
     }
     private val textPaint = Paint().apply {
         color = Color.WHITE
-        textSize = 36f
+        textSize = 12f * context.resources.displayMetrics.density
         isAntiAlias = true
-        setShadowLayer(4f, 2f, 2f, Color.BLACK)
+        setShadowLayer(2f * context.resources.displayMetrics.density, 1f * context.resources.displayMetrics.density, 1f * context.resources.displayMetrics.density, Color.BLACK)
     }
 
     private var maxHistory = 129 
@@ -390,9 +390,9 @@ class FFTHeatMapView @JvmOverloads constructor(
         // Draw Sz and St in the top right corner
         val szText = "Sz $fftSize"
         val stText = "St $stepSize"
-        val infoX = w - 10f
-        canvas.drawText(szText, infoX - textPaint.measureText(szText), 40f, textPaint)
-        canvas.drawText(stText, infoX - textPaint.measureText(stText), 80f, textPaint)
+        val infoX = w - 10f * resources.displayMetrics.density
+        canvas.drawText(szText, infoX - textPaint.measureText(szText), 20f * resources.displayMetrics.density, textPaint)
+        canvas.drawText(stText, infoX - textPaint.measureText(stText), 40f * resources.displayMetrics.density, textPaint)
     }
 
     private fun freqToY(freq: Float, h: Float): Float {

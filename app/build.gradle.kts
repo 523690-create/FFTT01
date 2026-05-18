@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.fftt01"
-        minSdk = 31
+        minSdk = 21
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -21,7 +21,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
