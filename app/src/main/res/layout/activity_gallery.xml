@@ -33,14 +33,14 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_view_module"
             android:scaleType="centerInside"
-            android:contentDescription="Toggle View"
+            android:contentDescription="@string/btn_view_toggle"
             android:layout_marginEnd="8dp" />
 
         <Button
             android:id="@+id/btnBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="LISTEN"
+            android:text="@string/btn_listen"
             android:backgroundTint="#00FFFF"
             android:textColor="#000000"
             android:textSize="12sp"

@@ -43,7 +43,7 @@ class LatencyActivity : AppCompatActivity() {
         }
 
         btnMeasure.isEnabled = false
-        txtResult.text = "Measuring..."
+        txtResult.setText(R.string.latency_measuring)
 
         Thread {
             try {
@@ -116,7 +116,7 @@ class LatencyActivity : AppCompatActivity() {
 
                 val latencyMs = calculateLatency(chirp, recorded)
                 runOnUiThread {
-                    txtResult.text = "Result: ${String.format(java.util.Locale.US, "%.2f", latencyMs)} ms"
+                    txtResult.text = getString(R.string.latency_result, latencyMs)
                     btnMeasure.isEnabled = true
                 }
 
@@ -125,7 +125,7 @@ class LatencyActivity : AppCompatActivity() {
                 runOnUiThread {
                     Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                     btnMeasure.isEnabled = true
-                    txtResult.text = "Result: Error"
+                    txtResult.setText(R.string.latency_error)
                 }
             }
         }.start()

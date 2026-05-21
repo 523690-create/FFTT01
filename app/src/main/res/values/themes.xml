@@ -15,4 +15,7 @@
         <!-- Force dark mode -->
         <item name="android:forceDarkAllowed" tools:targetApi="q">true</item>
     </style>
+    <style name="Theme.FFTT01.NoOverdraw" parent="Theme.FFTT01">
+        <item name="android:windowBackground">@null</item>
+    </style>
 </resources>

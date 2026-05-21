@@ -423,12 +423,12 @@ class MainActivity : AppCompatActivity() {
 
         noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
         filter.setSafeValue(noiseFilterStrength)
-        txtFilterValue?.text = "${(noiseFilterStrength * 100).toInt()}\n%"
+        txtFilterValue?.text = getString(R.string.percent_value, (noiseFilterStrength * 100).toInt())
         adjustSliderThickness(filter, txtFilterValue)
         filter.addOnChangeListener { slider, value, _ ->
             noiseFilterStrength = value
             txtFilterValue?.text = getString(R.string.percent_value, (value * 100).toInt())
-            prefs.edit { putFloat("noise_filter_strength", value) }
+            prefs.edit().putFloat("noise_filter_strength", value).apply()
             if (value == 0f) {
                 noiseFloor.fill(0f)
             }
@@ -754,7 +754,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 val latencyMs = (maxLag.toFloat() / sampleRate * 1000).toInt()
-                runOnUiThread { btnLatency?.text = "Latency ${latencyMs}ms" }
+                runOnUiThread { btnLatency?.text = getString(R.string.latency_display_prefix, latencyMs) }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {

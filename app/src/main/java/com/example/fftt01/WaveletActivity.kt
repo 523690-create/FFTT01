@@ -307,9 +307,9 @@ class WaveletActivity : AppCompatActivity() {
         sliderThreshold.setSafeValue(threshold)
         sliderColor.setSafeValue(colorSchemeIdx.toFloat())
         
-        txtLevelValue.text = decompositionLevel.toString()
-        txtOrderValue.text = waveletOrder.toString()
-        txtSamplingValue.text = if (targetFreq >= 1000) "${(targetFreq/1000).toInt()}\nkHz" else "${targetFreq.toInt()}\nHz"
+        txtLevelValue.text = getString(R.string.fft_size_value, decompositionLevel)
+        txtOrderValue.text = getString(R.string.fft_size_value, waveletOrder)
+        txtSamplingValue.text = if (targetFreq >= 1000) getString(R.string.khz_value, (targetFreq/1000).toInt()) else getString(R.string.hz_value, targetFreq.toInt())
         txtThresholdValue.text = String.format(java.util.Locale.US, "%.3f", threshold)
         val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
         txtColorValue.text = colorNames[colorSchemeIdx.coerceIn(0, 3)]
