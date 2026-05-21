@@ -27,7 +27,7 @@
             android:layout_weight="1"
             android:text="@string/title_listening"
             android:textColor="#FFFFFF"
-            android:textSize="@dimen/font_title"
+            android:textSize="@dimen/font_button"
             android:textStyle="bold"
             android:shadowColor="#000000"
             android:shadowDx="2"

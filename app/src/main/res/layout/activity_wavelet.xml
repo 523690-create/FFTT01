@@ -25,7 +25,7 @@
             android:layout_weight="1"
             android:text="@string/title_wavelet"
             android:textColor="#FFFFFF"
-            android:textSize="18sp"
+            android:textSize="@dimen/font_title"
             android:textStyle="bold"
             android:shadowColor="#000000"
             android:shadowDx="2"
@@ -39,7 +39,7 @@
             android:text="@string/btn_gallery"
             android:backgroundTint="#FFFF00"
             android:textColor="#000000"
-            android:textSize="10sp"
+            android:textSize="@dimen/font_button"
             android:textStyle="bold"
             android:layout_marginEnd="4dp"
             android:minWidth="0dp"
@@ -53,7 +53,7 @@
             android:text="LISTEN"
             android:backgroundTint="#00FFFF"
             android:textColor="#000000"
-            android:textSize="10sp"
+            android:textSize="@dimen/font_button"
             android:textStyle="bold"
             android:minWidth="0dp"
             android:paddingHorizontal="8dp"
@@ -81,159 +81,24 @@
         android:id="@+id/waveletControls"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="vertical"
-        android:padding="4dp"
+        android:orientation="horizontal"
         android:background="#222222"
+        android:weightSum="100"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/waveletGuideline">
 
+        <!-- Left Side: 4 Sliders (60%) -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="bottom"
-            android:weightSum="3">
-
-            <Button
-                android:id="@+id/btnWaveletBack"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/btn_esc"
-                android:backgroundTint="#FFA500"
-                android:textColor="#000000"
-                android:layout_margin="2dp"
-                android:textSize="@dimen/font_button"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_fam" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold"/>
-                <Spinner
-                    android:id="@+id/waveletFamilySpinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#FFFFFF"
-                    android:layout_margin="2dp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_bnd" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold"/>
-                <Spinner
-                    android:id="@+id/waveletBoundarySpinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#FFFFFF"
-                    android:layout_margin="2dp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="4dp"
-            android:weightSum="7">
-
-            <CheckBox
-                android:id="@+id/checkSoftThresh"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/label_soft"
-                android:textColor="#FFFFFF"
-                android:buttonTint="#FFFFFF"
-                android:textSize="@dimen/font_label_tiny"
-                android:padding="0dp" />
-
-            <CheckBox
-                android:id="@+id/checkWPT"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/label_wpt"
-                android:textColor="#FFFFFF"
-                android:buttonTint="#FFFFFF"
-                android:textSize="@dimen/font_label_tiny"
-                android:padding="0dp" />
-
-            <CheckBox
-                android:id="@+id/checkCWT"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/label_cwt"
-                android:textColor="#FFFFFF"
-                android:buttonTint="#FFFFFF"
-                android:textSize="@dimen/font_label_tiny"
-                android:padding="0dp" />
-
-            <CheckBox
-                android:id="@+id/checkLogScale"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/label_log"
-                android:textColor="#FFFFFF"
-                android:buttonTint="#FFFFFF"
-                android:textSize="@dimen/font_label_tiny"
-                android:padding="0dp" />
-
-            <CheckBox
-                android:id="@+id/checkLocalNorm"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/label_lnorm"
-                android:textColor="#FFFFFF"
-                android:buttonTint="#FFFFFF"
-                android:textSize="@dimen/font_label_tiny"
-                android:padding="0dp" />
-
-            <CheckBox
-                android:id="@+id/checkReconstruct"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/label_recon"
-                android:textColor="#FFFFFF"
-                android:buttonTint="#FFFFFF"
-                android:textSize="@dimen/font_label_tiny"
-                android:padding="0dp" />
-
-            <Button
-                android:id="@+id/btnWaveletStop"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/btn_quit"
-                android:backgroundTint="#FF0000"
-                android:textColor="#FFFFFF"
-                android:textSize="@dimen/font_label_tiny"
-                android:textStyle="bold"
-                android:minHeight="0dp"
-                android:paddingHorizontal="2dp"
-                style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_weight="60"
             android:orientation="horizontal"
-            android:weightSum="5">
+            android:padding="4dp"
+            android:weightSum="4">
 
+            <!-- Level Slider -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -262,6 +127,7 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- Order Slider -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -290,6 +156,7 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- Sampling Slider -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -318,6 +185,7 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- Threshold Slider -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -345,33 +213,80 @@
                     <TextView android:id="@+id/txtThresholdValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0.1" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
                 </FrameLayout>
             </LinearLayout>
+        </LinearLayout>
+
+        <!-- Right Side: Spinners and Buttons (40%) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="40"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:gravity="center_horizontal">
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_color" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
-                <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/sliderColor"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:valueFrom="0.0"
-                        android:valueTo="3.0"
-                        android:value="0.0"
-                        android:stepSize="1.0"
-                        android:orientation="vertical"
-                        app:labelBehavior="gone"
-                        app:trackHeight="@dimen/slider_track_height"
-                        app:thumbRadius="0dp"
-                        app:thumbColor="@android:color/transparent"
-                        app:trackColorActive="#AAAAAA"
-                        app:trackColorInactive="#333333"
-                        android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtColorValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Default" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
-                </FrameLayout>
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_fam" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_marginEnd="4dp"/>
+                <Spinner
+                    android:id="@+id/waveletFamilySpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/spinner_height"
+                    android:layout_weight="1"
+                    android:backgroundTint="#FFFFFF" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_bnd" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_marginEnd="4dp"/>
+                <Spinner
+                    android:id="@+id/waveletBoundarySpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/spinner_height"
+                    android:layout_weight="1"
+                    android:backgroundTint="#FFFFFF" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_color" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_marginEnd="4dp"/>
+                <Spinner
+                    android:id="@+id/waveletColorSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/spinner_height"
+                    android:layout_weight="1"
+                    android:backgroundTint="#FFFFFF" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnWaveletBack"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="FFT"
+                android:backgroundTint="#FFA500"
+                android:textColor="#000000"
+                android:textSize="@dimen/font_button"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+
+            <!-- Checkboxes Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingTop="4dp">
+                <CheckBox android:id="@+id/checkSoftThresh" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_soft" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+                <CheckBox android:id="@+id/checkWPT" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_wpt" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+                <CheckBox android:id="@+id/checkCWT" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_cwt" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+                <CheckBox android:id="@+id/checkLogScale" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_log" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+                <CheckBox android:id="@+id/checkLocalNorm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_lnorm" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+                <CheckBox android:id="@+id/checkReconstruct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_recon" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

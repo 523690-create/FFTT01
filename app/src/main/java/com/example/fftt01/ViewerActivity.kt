@@ -896,21 +896,17 @@ class ViewerActivity : AppCompatActivity() {
         val density = resources.displayMetrics.density
         
         // Precise thumb center calculation
-        val thumbRadius = slider.thumbRadius.toFloat()
-        val trackTop = slider.paddingTop + thumbRadius
-        val trackBottom = totalHeight - slider.paddingBottom - thumbRadius
+        val trackTop = slider.paddingTop.toFloat()
+        val trackBottom = totalHeight - slider.paddingBottom.toFloat()
         val trackLength = trackBottom - trackTop
         
         val thumbY = trackBottom - (normalizedValue * trackLength)
         
-        // Bar extends from thumbY down to container bottom
-        val barTopY = thumbY
-        
-        // Align label top with barTopY
-        label.translationY = barTopY - label.top
+        // Align label center with thumbY
+        label.translationY = thumbY - (label.top + label.height / 2f)
         
         // Set label height to fill the remaining space
-        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast((18f * density).toInt())
+        val targetHeight = (totalHeight - thumbY).toInt().coerceAtLeast((18f * density).toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()

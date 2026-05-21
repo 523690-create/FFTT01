@@ -561,11 +561,11 @@ class MainActivity : AppCompatActivity() {
         
         val handleHeight = 24f * density
         val availableLength = totalHeight - handleHeight
-        val barTopY = availableLength - (normalizedValue * availableLength)
+        val thumbY = availableLength - (normalizedValue * availableLength) + handleHeight / 2f
         
-        label.translationY = barTopY - label.top
+        label.translationY = thumbY - (label.top + label.height / 2f)
         
-        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast(handleHeight.toInt())
+        val targetHeight = (totalHeight - (thumbY - handleHeight / 2f)).toInt().coerceAtLeast(handleHeight.toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()

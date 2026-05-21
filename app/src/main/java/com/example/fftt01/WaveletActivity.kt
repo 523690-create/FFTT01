@@ -45,6 +45,8 @@ class WaveletActivity : AppCompatActivity() {
     private var filePath: String? = null
     private var pcmData: FloatArray? = null
 
+    private lateinit var colorSpinner: Spinner
+    private var colorSchemeIdx = 0
     private var decompositionLevel = 4
     private var targetFreq = 44100f
     private var originalSampleRate = 44100f
@@ -58,7 +60,6 @@ class WaveletActivity : AppCompatActivity() {
     private var isReconstruct = false
     private var isCWT = false
     private var selectedBoundaryIdx = 0
-    private var colorSchemeIdx = 0
 
     @Volatile
     private var isStopRequested = false
@@ -100,7 +101,7 @@ class WaveletActivity : AppCompatActivity() {
         sliderLevel = findViewById(R.id.sliderLevel)
         sliderSampling = findViewById(R.id.sliderSampling)
         sliderThreshold = findViewById(R.id.sliderThreshold)
-        sliderColor = findViewById(R.id.sliderColor)
+        colorSpinner = findViewById(R.id.waveletColorSpinner)
 
         txtLevelValue = findViewById(R.id.txtLevelValue)
         txtOrderValue = findViewById(R.id.txtOrderValue)
@@ -111,6 +112,7 @@ class WaveletActivity : AppCompatActivity() {
         prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
         loadPrefs()
         setupControls()
+        setupColorSpinner()
 
         filePath = intent.getStringExtra("FILE_PATH")
         waveletView.post {
@@ -196,21 +198,21 @@ class WaveletActivity : AppCompatActivity() {
         val density = resources.displayMetrics.density
         
         // Precise thumb center calculation
-        val thumbRadius = slider.thumbRadius.toFloat()
-        val trackTop = slider.paddingTop + thumbRadius
-        val trackBottom = totalHeight - slider.paddingBottom - thumbRadius
+        val trackTop = slider.paddingTop.toFloat()
+        val trackBottom = totalHeight - slider.paddingBottom.toFloat()
         val trackLength = trackBottom - trackTop
         
+        // At min value (bottom), thumb center is at trackBottom
         val thumbY = trackBottom - (normalizedValue * trackLength)
         
-        // Bar extends from thumbY down to container bottom
-        val barTopY = thumbY
+        // Calculate label target center
+        val labelCenterY = thumbY
         
-        // Align label top with barTopY
-        label.translationY = barTopY - label.top
+        // Align label center with thumb center
+        label.translationY = labelCenterY - (label.top + label.height / 2f)
         
         // Set label height to fill the remaining space
-        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast((24f * density).toInt())
+        val targetHeight = (totalHeight - thumbY).toInt().coerceAtLeast((24f * density).toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()
@@ -360,6 +362,24 @@ class WaveletActivity : AppCompatActivity() {
         return true
     }
 
+    private fun setupColorSpinner() {
+        val colorOptions = arrayOf("Default", "Inferno", "Magma", "Viridis")
+        val adapter = ArrayAdapter(this, R.layout.spinner_item_orange, colorOptions)
+        colorSpinner.adapter = adapter
+        colorSpinner.setSelection(colorSchemeIdx)
+        colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, pos: Int, p3: Long) {
+                if (colorSchemeIdx != pos) {
+                    colorSchemeIdx = pos
+                    prefs.edit().putInt("wavelet_color_scheme", colorSchemeIdx).apply()
+                    waveletView.setColorScheme(colorSchemeIdx)
+                    runDwt()
+                }
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+    }
+
     private fun setupControls() {
         val families = arrayOf("DAUB", "SYM", "COIF")
         val familyAdapter = ArrayAdapter(this, R.layout.spinner_item, families)
@@ -479,16 +499,7 @@ class WaveletActivity : AppCompatActivity() {
                 runDwt()
             }
         }
-        sliderColor.addOnChangeListener { s, value, fromUser ->
-            if (fromUser) {
-                colorSchemeIdx = value.toInt()
-                val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
-                txtColorValue.text = colorNames[colorSchemeIdx.coerceIn(0, 3)]
-                waveletView.setColorScheme(colorSchemeIdx)
-                prefs.edit().putInt("color_scheme", colorSchemeIdx).apply()
-                updateLabelPosition(s, txtColorValue)
-            }
-        }
+        // sliderColor removed
     }
 
     private fun updateOrderSliderRange() {

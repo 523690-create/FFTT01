@@ -19,24 +19,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:weightSum="100">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="15"
-            android:text="@string/title_analysis"
-            android:textColor="#FFFFFF"
-            android:textSize="@dimen/font_title"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:includeFontPadding="false" />
+        android:weightSum="5">
 
         <Spinner
             android:id="@+id/vSizeSpinner"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="12.5"
+            android:layout_weight="1"
             android:background="@android:color/transparent"
             android:overlapAnchor="false" />
 
@@ -44,7 +33,7 @@
             android:id="@+id/vStepSpinner"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="12.5"
+            android:layout_weight="1"
             android:background="@android:color/transparent"
             android:overlapAnchor="false" />
 
@@ -52,7 +41,7 @@
             android:id="@+id/btnViewerSweep"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="19.5"
+            android:layout_weight="1"
             android:text="@string/sweep_off"
             android:backgroundTint="#FF69B4"
             android:textColor="#FFFFFF"
@@ -68,7 +57,7 @@
             android:id="@+id/btnViewerGalleryTop"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="19.5"
+            android:layout_weight="1"
             android:text="@string/btn_gallery"
             android:backgroundTint="#FFFF00"
             android:textColor="#000000"
@@ -84,7 +73,7 @@
             android:id="@+id/btnViewerListenTop"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="19.5"
+            android:layout_weight="1"
             android:text="LISTEN"
             android:backgroundTint="#00FFFF"
             android:textColor="#000000"
@@ -150,7 +139,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="25"
-            android:text="@string/btn_wave"
+            android:text="Wavelet"
             android:backgroundTint="#FFFF00"
             android:textColor="#000000"
             android:textSize="@dimen/font_button"

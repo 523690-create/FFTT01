@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:text="@string/title_listening"
             android:textColor="#FFFFFF"
-            android:textSize="@dimen/font_title"
+            android:textSize="@dimen/font_button"
             android:textStyle="bold"
             android:includeFontPadding="false"
             android:layout_marginBottom="8dp"/>
