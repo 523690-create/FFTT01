@@ -30,6 +30,7 @@ class FFTHeatMapView @JvmOverloads constructor(
 
     private var maxHistory = 129 
     private var currentColumn = 0
+    private var framesProcessed = 0L
     private var spectrogramBitmap: Bitmap? = null
     private var yToBinMapping: IntArray? = null
     
@@ -202,6 +203,7 @@ class FFTHeatMapView @JvmOverloads constructor(
 
     fun clearHistory() {
         currentColumn = 0
+        framesProcessed = 0L
         spectrogramBitmap?.eraseColor(Color.TRANSPARENT)
         invalidate()
     }
@@ -242,6 +244,7 @@ class FFTHeatMapView @JvmOverloads constructor(
         val h = bitmap.height
         
         currentColumn = (currentColumn + 1) % maxHistory
+        framesProcessed++
         
         val columnPixels = IntArray(h)
         
@@ -326,6 +329,10 @@ class FFTHeatMapView @JvmOverloads constructor(
         isFilterBitmap = true
         isAntiAlias = true
     }
+    private val gridPaint = Paint().apply {
+        color = Color.BLACK
+        style = Paint.Style.STROKE
+    }
     private val srcRect = Rect()
     private val dstRect = RectF()
 
@@ -378,6 +385,32 @@ class FFTHeatMapView @JvmOverloads constructor(
                     srcRect.set(0, 0, currentColumn + 1, bitmap.height)
                     dstRect.set(w - splitX, 0f, w, h)
                     canvas.drawBitmap(bitmap, srcRect, dstRect, bitmapPaint)
+                }
+            }
+
+            // Add thin black vertical lines every 100ms if blur is odd
+            if (blurRadius % 2 != 0) {
+                gridPaint.strokeWidth = 1f * resources.displayMetrics.density / zoomFactorX
+                val framesPer100ms = (0.1f * sampleRate) / stepSize
+                if (framesPer100ms > 0) {
+                    val frameWidth = w / maxHistory
+                    for (i in 0 until maxHistory) {
+                        val absIdx = framesProcessed - ((currentColumn - i + maxHistory) % maxHistory)
+                        if (absIdx < 0) continue
+
+                        if (kotlin.math.floor(absIdx / framesPer100ms) != kotlin.math.floor((absIdx - 1) / framesPer100ms)) {
+                            val x = if (isFrozen) {
+                                i * frameWidth
+                            } else {
+                                if (i > currentColumn) {
+                                    (i - (currentColumn + 1)) * frameWidth
+                                } else {
+                                    (maxHistory - currentColumn - 1 + i) * frameWidth
+                                }
+                            }
+                            canvas.drawLine(x, 0f, x, h, gridPaint)
+                        }
+                    }
                 }
             }
         }
