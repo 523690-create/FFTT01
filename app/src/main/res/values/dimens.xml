@@ -1,0 +1,14 @@
+<resources>
+    <!-- Font Sizes -->
+    <dimen name="font_title">18sp</dimen>
+    <dimen name="font_button">10sp</dimen>
+    <dimen name="font_label_small">8sp</dimen>
+    <dimen name="font_label_tiny">6sp</dimen>
+    <dimen name="font_value_large">14sp</dimen>
+
+    <!-- Control Sizes -->
+    <dimen name="button_height">40dp</dimen>
+    <dimen name="spinner_height">40dp</dimen>
+    <dimen name="slider_track_height">32dp</dimen>
+    <dimen name="slider_thumb_radius">16dp</dimen>
+</resources>

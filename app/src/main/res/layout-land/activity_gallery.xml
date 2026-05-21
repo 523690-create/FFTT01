@@ -22,7 +22,7 @@
             android:layout_weight="1"
             android:text="@string/title_gallery"
             android:textColor="#FFFFFF"
-            android:textSize="18sp"
+            android:textSize="@dimen/font_title"
             android:textStyle="bold" />
 
         <!-- View Toggle is invisible in landscape (Grid forced) -->
@@ -36,10 +36,10 @@
             android:id="@+id/btnBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="LISTEN"
+            android:text="@string/btn_listen"
             android:backgroundTint="#00FFFF"
             android:textColor="#000000"
-            android:textSize="12sp"
+            android:textSize="@dimen/font_button"
             android:textStyle="bold"
             style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
 

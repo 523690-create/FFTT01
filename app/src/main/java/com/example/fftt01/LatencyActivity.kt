@@ -50,42 +50,63 @@ class LatencyActivity : AppCompatActivity() {
                 val chirp = generateChirp()
                 val recorded = FloatArray(bufferSize)
                 
-                val recorder = AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
-                    sampleRate,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_FLOAT,
-                    AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT).coerceAtLeast(bufferSize * 4)
-                )
+                val recorder = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    AudioRecord(
+                        MediaRecorder.AudioSource.MIC,
+                        sampleRate,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_FLOAT,
+                        AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT).coerceAtLeast(bufferSize * 4)
+                    )
+                } else {
+                    AudioRecord(
+                        MediaRecorder.AudioSource.MIC,
+                        sampleRate,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT,
+                        AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT).coerceAtLeast(bufferSize * 2)
+                    )
+                }
 
                 val attributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build()
-                val format = AudioFormat.Builder()
-                    .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
-                    .setSampleRate(sampleRate)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                    .build()
 
                 val player = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                     AudioTrack.Builder()
                         .setAudioAttributes(attributes)
-                        .setAudioFormat(format)
+                        .setAudioFormat(AudioFormat.Builder()
+                            .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
+                            .setSampleRate(sampleRate)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build())
                         .setBufferSizeInBytes(chirp.size * 4)
                         .setTransferMode(AudioTrack.MODE_STATIC)
                         .build()
                 } else {
                     AudioTrack(
                         attributes,
-                        format,
-                        chirp.size * 4,
+                        AudioFormat.Builder()
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setSampleRate(sampleRate)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build(),
+                        chirp.size * 2,
                         AudioTrack.MODE_STATIC,
                         AudioManager.AUDIO_SESSION_ID_GENERATE
                     )
                 }
 
-                player.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    player.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
+                } else {
+                    val shortChirp = ShortArray(chirp.size)
+                    for (i in chirp.indices) {
+                        shortChirp[i] = (chirp[i] * 32767).toInt().toShort()
+                    }
+                    player.write(shortChirp, 0, shortChirp.size)
+                }
 
                 recorder.startRecording()
                 player.play()
@@ -95,8 +116,6 @@ class LatencyActivity : AppCompatActivity() {
                     val read = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                         recorder.read(recorded, totalRead, bufferSize - totalRead, AudioRecord.READ_BLOCKING)
                     } else {
-                        // Fallback for API 21-22: Read as short and convert, or use ByteBuffer
-                        // For simplicity in this latency test, we can use short read
                         val shortBuffer = ShortArray(bufferSize - totalRead)
                         val sRead = recorder.read(shortBuffer, 0, shortBuffer.size)
                         if (sRead > 0) {

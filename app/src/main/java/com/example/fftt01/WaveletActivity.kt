@@ -138,25 +138,26 @@ class WaveletActivity : AppCompatActivity() {
             if (availableWidth <= 0) return@post
 
             val density = resources.displayMetrics.density
+            val gutterPx = 4f * density
+            val maxThickness = resources.getDimension(R.dimen.slider_track_height) * 2.5f
+            val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
             
-            label?.let {
-                it.setBackgroundColor(Color.WHITE)
-                it.setTextColor(Color.BLACK)
-                val p = (2f * density).toInt()
-                it.setPadding(p, 0, p, 0)
-                it.elevation = 6f * density
-                it.minWidth = (50f * density).toInt()
-                it.textSize = 8f
-            }
-
-            slider.post {
-                val labelWidth = label?.width ?: 0
-                if (labelWidth > 0) {
-                    slider.trackHeight = labelWidth
-                    slider.thumbRadius = (2f * density).toInt()
-                    slider.setCustomThumbDrawable(R.drawable.slider_thumb_line)
-                    updateLabelPosition(slider, label)
+            if (thickness > 0) {
+                slider.trackHeight = thickness.toInt()
+                slider.thumbRadius = (thickness / 2f).toInt()
+                
+                label?.let {
+                    it.setBackgroundColor(Color.WHITE)
+                    it.setTextColor(Color.BLACK)
+                    val p = (2f * density).toInt()
+                    it.setPadding(p, 0, p, 0)
+                    it.elevation = 6f * density
+                    it.minWidth = (50f * density).toInt()
+                    val baseSp = resources.getDimension(R.dimen.font_label_small) / density
+                    it.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, baseSp)
                 }
+                
+                updateLabelPosition(slider, label)
             }
         }
     }

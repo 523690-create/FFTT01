@@ -503,11 +503,19 @@ class MainActivity : AppCompatActivity() {
     private fun adjustSliderThickness(slider: Slider, label: TextView?) {
         slider.post {
             val density = resources.displayMetrics.density
+            val parent = slider.parent as? android.view.View ?: return@post
+            val availableWidth = parent.width.toFloat()
+            if (availableWidth <= 0) return@post
+
+            val gutterPx = 4f * density
+            val maxThickness = resources.getDimension(R.dimen.slider_track_height) * 2.5f
+            val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
             
             // Set slider to be invisible but interactive
             slider.trackActiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             slider.trackInactiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-            slider.thumbRadius = 0 
+            slider.thumbRadius = (thickness / 2f).toInt()
+            slider.trackHeight = thickness.toInt()
             slider.haloRadius = 0
             
             label?.let {
@@ -515,7 +523,8 @@ class MainActivity : AppCompatActivity() {
                 it.setTextColor(Color.BLACK)
                 it.elevation = 6f * density
                 it.minWidth = (40f * density).toInt()
-                it.textSize = 8f
+                val baseSp = resources.getDimension(R.dimen.font_label_small) / density
+                it.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, baseSp)
                 it.gravity = android.view.Gravity.CENTER
                 it.setPadding(0, (2f * density).toInt(), 0, 0)
             }
@@ -581,16 +590,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT)
+        val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AudioFormat.ENCODING_PCM_FLOAT else AudioFormat.ENCODING_PCM_16BIT)
         val bufferSize = max(minBufferSize, fftSize * 4)
         
-        val record = AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_FLOAT,
-            bufferSize
-        )
+        val record = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_FLOAT,
+                bufferSize
+            )
+        } else {
+            AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize
+            )
+        }
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             selectedDevice?.let { record.setPreferredDevice(it) }
@@ -598,20 +617,25 @@ class MainActivity : AppCompatActivity() {
         
         audioRecord = record
         recording.set(true)
-        record.startRecording()
+        try {
+            record.startRecording()
+        } catch (e: Exception) {
+            recording.set(false)
+            return
+        }
 
         recordingThread = Thread {
             val audioBuffer = FloatArray(stepSize)
             val fftInput = FloatArray(fftSize)
             val real = FloatArray(fftSize)
             val imag = FloatArray(fftSize)
+            val shortBuffer = ShortArray(stepSize)
 
             while (recording.get() && record.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
-                val read = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                val readCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     record.read(audioBuffer, 0, stepSize, AudioRecord.READ_BLOCKING)
                 } else {
                     // Fallback for API 21-22: Read as short and convert
-                    val shortBuffer = ShortArray(stepSize)
                     val sRead = record.read(shortBuffer, 0, stepSize)
                     if (sRead > 0) {
                         for (i in 0 until sRead) {
@@ -620,20 +644,21 @@ class MainActivity : AppCompatActivity() {
                     }
                     sRead
                 }
-                if (read > 0) {
-                    for (i in 0 until read) {
+
+                if (readCount > 0) {
+                    for (i in 0 until readCount) {
                         var s = audioBuffer[i]
                         for (f in filters) s = f.process(s)
                         audioBuffer[i] = s
                     }
 
-                    for (i in 0 until read) {
+                    for (i in 0 until readCount) {
                         audioCircularBuffer[audioWriteIndex] = audioBuffer[i]
                         audioWriteIndex = (audioWriteIndex + 1) % audioBufferSize
                     }
 
-                    System.arraycopy(fftInput, read, fftInput, 0, fftSize - read)
-                    System.arraycopy(audioBuffer, 0, fftInput, fftSize - read, read)
+                    System.arraycopy(fftInput, readCount, fftInput, 0, fftSize - readCount)
+                    System.arraycopy(audioBuffer, 0, fftInput, fftSize - readCount, readCount)
 
                     for (i in 0 until fftSize) {
                         real[i] = fftInput[i] * hannWindow[i]

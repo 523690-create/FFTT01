@@ -23,7 +23,7 @@ class FFTHeatMapView @JvmOverloads constructor(
     }
     private val textPaint = Paint().apply {
         color = Color.WHITE
-        textSize = 12f * context.resources.displayMetrics.density
+        textSize = context.resources.getDimension(R.dimen.font_button)
         isAntiAlias = true
         setShadowLayer(2f * context.resources.displayMetrics.density, 1f * context.resources.displayMetrics.density, 1f * context.resources.displayMetrics.density, Color.BLACK)
     }

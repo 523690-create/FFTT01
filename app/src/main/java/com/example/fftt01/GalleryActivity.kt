@@ -98,25 +98,27 @@ class GalleryActivity : AppCompatActivity() {
             
             if (isGridView || isLandscape) {
                 holder.root.orientation = LinearLayout.VERTICAL
-                holder.textView.layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-                holder.textView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                val tParams = holder.textView.layoutParams as LinearLayout.LayoutParams
+                tParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+                tParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                tParams.weight = 0f
+                tParams.marginStart = 0
+                holder.textView.layoutParams = tParams
                 holder.textView.gravity = android.view.Gravity.CENTER
                 holder.textView.maxLines = 1
                 holder.textView.ellipsize = android.text.TextUtils.TruncateAt.END
                 holder.textView.setPadding(0, 4, 0, 0)
-                // Remove margin for grid
-                val params = holder.textView.layoutParams as LinearLayout.LayoutParams
-                params.marginStart = 0
             } else {
                 holder.root.orientation = LinearLayout.HORIZONTAL
-                holder.textView.layoutParams.width = 0
-                holder.textView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                val tParams = holder.textView.layoutParams as LinearLayout.LayoutParams
+                tParams.width = 0
+                tParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                tParams.weight = 1f
+                tParams.marginStart = 8
+                holder.textView.layoutParams = tParams
                 holder.textView.gravity = android.view.Gravity.START
                 holder.textView.maxLines = Int.MAX_VALUE
                 holder.textView.setPadding(0, 0, 0, 0)
-                val params = holder.textView.layoutParams as LinearLayout.LayoutParams
-                params.weight = 1f
-                params.marginStart = 8
             }
 
             holder.textView.text = file.name

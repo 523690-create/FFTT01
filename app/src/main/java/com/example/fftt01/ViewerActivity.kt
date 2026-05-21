@@ -776,12 +776,6 @@ class ViewerActivity : AppCompatActivity() {
                 audioData[i] = (filteredPcm[i].coerceIn(-1f, 1f) * 32767).toInt().toShort()
             }
 
-            val bufferSize = AudioTrack.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-            )
-
             val attributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -796,14 +790,14 @@ class ViewerActivity : AppCompatActivity() {
                 AudioTrack.Builder()
                     .setAudioAttributes(attributes)
                     .setAudioFormat(format)
-                    .setBufferSizeInBytes(bufferSize.coerceAtLeast(audioData.size * 2))
+                    .setBufferSizeInBytes(audioData.size * 2)
                     .setTransferMode(AudioTrack.MODE_STATIC)
                     .build()
             } else {
                 AudioTrack(
                     attributes,
                     format,
-                    bufferSize.coerceAtLeast(audioData.size * 2),
+                    audioData.size * 2,
                     AudioTrack.MODE_STATIC,
                     AudioManager.AUDIO_SESSION_ID_GENERATE
                 )
@@ -845,31 +839,31 @@ class ViewerActivity : AppCompatActivity() {
             if (availableWidth <= 0) return@post
 
             val density = resources.displayMetrics.density
+            val gutterPx = 4f * density
+            val maxThickness = resources.getDimension(R.dimen.slider_track_height) * 2.5f
+            val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
             
             // Set slider to be invisible but interactive
             slider.setTrackActiveTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
             slider.setTrackInactiveTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
             slider.setThumbTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
             slider.setHaloTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
+            slider.thumbRadius = (thickness / 2f).toInt()
+            slider.trackHeight = thickness.toInt()
             
-        // Set text box appearance
-        label?.let {
-            it.setBackgroundColor(Color.WHITE)
-            it.setTextColor(Color.BLACK)
-            it.elevation = 6f * density
-            it.minWidth = (40f * density).toInt()
-            it.textSize = 8f
-            it.gravity = android.view.Gravity.CENTER
-            it.setPadding(0, (2f * density).toInt(), 0, 0)
-        }
-
-            slider.post {
-                val labelWidth = label?.width ?: 0
-                if (labelWidth > 0) {
-                    slider.trackHeight = labelWidth
-                    updateLabelPosition(slider, label)
-                }
+            // Set text box appearance
+            label?.let {
+                it.setBackgroundColor(Color.WHITE)
+                it.setTextColor(Color.BLACK)
+                it.elevation = 6f * density
+                it.minWidth = (40f * density).toInt()
+                val baseSp = resources.getDimension(R.dimen.font_label_small) / density
+                it.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, baseSp)
+                it.gravity = android.view.Gravity.CENTER
+                it.setPadding(0, (2f * density).toInt(), 0, 0)
             }
+
+            updateLabelPosition(slider, label)
         }
     }
 

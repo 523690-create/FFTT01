@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:text="@string/title_latency"
         android:textColor="#FFFFFF"
-        android:textSize="20sp"
+        android:textSize="@dimen/font_title"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="24dp"/>
 
@@ -22,7 +22,7 @@
         android:text="@string/btn_start_measurement"
         android:backgroundTint="#AA0000"
         android:textColor="#FFFFFF"
-        android:textSize="10sp"
+        android:textSize="@dimen/font_title"
         android:layout_marginBottom="24dp"/>
 
     <TextView
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:text="@string/latency_error"
         android:textColor="#00FF00"
-        android:textSize="24sp"
+        android:textSize="@dimen/font_value_large"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="24dp"/>
 
@@ -40,7 +40,7 @@
         android:layout_height="wrap_content"
         android:text="@string/latency_instructions"
         android:textColor="#888888"
-        android:textSize="14sp"/>
+        android:textSize="@dimen/font_button"/>
 
     <View
         android:layout_width="match_parent"

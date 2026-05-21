@@ -105,7 +105,7 @@
                 android:backgroundTint="#FFA500"
                 android:textColor="#000000"
                 android:layout_margin="2dp"
-                android:textSize="12sp"
+                android:textSize="@dimen/font_button"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -114,7 +114,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_fam" android:textColor="#FFFF00" android:textSize="12sp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_fam" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold"/>
                 <Spinner
                     android:id="@+id/waveletFamilySpinner"
                     android:layout_width="match_parent"
@@ -129,7 +129,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_bnd" android:textColor="#FFFF00" android:textSize="12sp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_bnd" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold"/>
                 <Spinner
                     android:id="@+id/waveletBoundarySpinner"
                     android:layout_width="match_parent"
@@ -153,7 +153,7 @@
                 android:text="@string/label_soft"
                 android:textColor="#FFFFFF"
                 android:buttonTint="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/font_label_small" />
 
             <CheckBox
                 android:id="@+id/checkWPT"
@@ -162,7 +162,7 @@
                 android:text="@string/label_wpt"
                 android:textColor="#FFFFFF"
                 android:buttonTint="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/font_label_small" />
 
             <CheckBox
                 android:id="@+id/checkCWT"
@@ -171,7 +171,7 @@
                 android:text="@string/label_cwt"
                 android:textColor="#FFFFFF"
                 android:buttonTint="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/font_label_small" />
 
             <CheckBox
                 android:id="@+id/checkLogScale"
@@ -180,7 +180,7 @@
                 android:text="@string/label_log"
                 android:textColor="#FFFFFF"
                 android:buttonTint="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/font_label_small" />
 
             <CheckBox
                 android:id="@+id/checkLocalNorm"
@@ -189,7 +189,7 @@
                 android:text="@string/label_lnorm"
                 android:textColor="#FFFFFF"
                 android:buttonTint="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/font_label_small" />
 
             <CheckBox
                 android:id="@+id/checkReconstruct"
@@ -198,7 +198,7 @@
                 android:text="@string/label_recon"
                 android:textColor="#FFFFFF"
                 android:buttonTint="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/font_label_small" />
 
             <Button
                 android:id="@+id/btnWaveletStop"
@@ -208,7 +208,7 @@
                 android:backgroundTint="#FF0000"
                 android:textColor="#FFFFFF"
                 android:layout_margin="2dp"
-                android:textSize="12sp"
+                android:textSize="@dimen/font_button"
                 android:textStyle="bold" />
         </GridLayout>
 
@@ -224,7 +224,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="24dp" android:text="@string/label_lvl" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold"/>
+                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_lvl" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
                 <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                     <com.google.android.material.slider.Slider
                         android:id="@+id/sliderLevel"
@@ -236,13 +236,13 @@
                         android:stepSize="1.0"
                         android:orientation="vertical"
                         app:labelBehavior="gone"
-                        app:trackHeight="88dp"
-                        app:thumbRadius="44dp"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:thumbRadius="@dimen/slider_thumb_radius"
                         app:thumbColor="#FFFFFF"
                         app:trackColorActive="#00FFFF"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtLevelValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="4" android:textColor="#000000" android:textSize="12sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtLevelValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="4" android:textColor="#000000" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -252,7 +252,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="24dp" android:text="@string/label_ord" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold"/>
+                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_ord" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
                 <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                     <com.google.android.material.slider.Slider
                         android:id="@+id/sliderOrder"
@@ -264,13 +264,13 @@
                         android:stepSize="1.0"
                         android:orientation="vertical"
                         app:labelBehavior="gone"
-                        app:trackHeight="88dp"
-                        app:thumbRadius="44dp"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:thumbRadius="@dimen/slider_thumb_radius"
                         app:thumbColor="#FFFFFF"
                         app:trackColorActive="#00FFFF"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtOrderValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1" android:textColor="#000000" android:textSize="12sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtOrderValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1" android:textColor="#000000" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -280,7 +280,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="24dp" android:text="@string/label_fs" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold"/>
+                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_fs" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
                 <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                     <com.google.android.material.slider.Slider
                         android:id="@+id/sliderSampling"
@@ -292,13 +292,13 @@
                         android:stepSize="1.0"
                         android:orientation="vertical"
                         app:labelBehavior="gone"
-                        app:trackHeight="88dp"
-                        app:thumbRadius="44dp"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:thumbRadius="@dimen/slider_thumb_radius"
                         app:thumbColor="#FFFFFF"
                         app:trackColorActive="#AAAAAA"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtSamplingValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="44k" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtSamplingValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="44k" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -308,7 +308,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="24dp" android:text="@string/label_thr" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold"/>
+                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_thr" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
                 <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                     <com.google.android.material.slider.Slider
                         android:id="@+id/sliderThreshold"
@@ -320,13 +320,13 @@
                         android:stepSize="0.001"
                         android:orientation="vertical"
                         app:labelBehavior="gone"
-                        app:trackHeight="88dp"
-                        app:thumbRadius="44dp"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:thumbRadius="@dimen/slider_thumb_radius"
                         app:thumbColor="#FFFFFF"
                         app:trackColorActive="#FF00FF"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtThresholdValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.1" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtThresholdValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0.1" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -336,7 +336,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="24dp" android:text="@string/label_color" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold"/>
+                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_color" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
                 <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                     <com.google.android.material.slider.Slider
                         android:id="@+id/sliderColor"
@@ -348,13 +348,13 @@
                         android:stepSize="1.0"
                         android:orientation="vertical"
                         app:labelBehavior="gone"
-                        app:trackHeight="88dp"
-                        app:thumbRadius="44dp"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:thumbRadius="@dimen/slider_thumb_radius"
                         app:thumbColor="#FFFFFF"
                         app:trackColorActive="#AAAAAA"
                         app:trackColorInactive="#333333"
                         android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtColorValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Default" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp"/>
+                    <TextView android:id="@+id/txtColorValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Default" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
                 </FrameLayout>
             </LinearLayout>
         </LinearLayout>
