@@ -348,7 +348,13 @@ class MainActivity : AppCompatActivity() {
         val spinner = micSpinner ?: return
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) return
 
-        val deviceNames = devices.map { it.productName.toString() + " (" + getDeviceTypeName(it.type) + ")" }
+        val deviceNames = devices.map { 
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                it.productName.toString() + " (" + getDeviceTypeName(it.type) + ")" 
+            } else {
+                "Microphone"
+            }
+        }
         val adapter = ArrayAdapter(this, R.layout.spinner_item_orange, deviceNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
@@ -601,7 +607,19 @@ class MainActivity : AppCompatActivity() {
             val imag = FloatArray(fftSize)
 
             while (recording.get() && record.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
-                val read = record.read(audioBuffer, 0, stepSize, AudioRecord.READ_BLOCKING)
+                val read = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    record.read(audioBuffer, 0, stepSize, AudioRecord.READ_BLOCKING)
+                } else {
+                    // Fallback for API 21-22: Read as short and convert
+                    val shortBuffer = ShortArray(stepSize)
+                    val sRead = record.read(shortBuffer, 0, stepSize)
+                    if (sRead > 0) {
+                        for (i in 0 until sRead) {
+                            audioBuffer[i] = shortBuffer[i] / 32768f
+                        }
+                    }
+                    sRead
+                }
                 if (read > 0) {
                     for (i in 0 until read) {
                         var s = audioBuffer[i]

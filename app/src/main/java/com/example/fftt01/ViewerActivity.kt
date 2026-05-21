@@ -4,13 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
-import android.media.AudioAttributes
-import android.media.AudioFormat
-import android.media.AudioTrack
-import android.media.MediaCodec
-import android.media.MediaExtractor
-import android.media.MediaFormat
-import android.media.MediaPlayer
+import android.media.*
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -788,26 +782,39 @@ class ViewerActivity : AppCompatActivity() {
                 AudioFormat.ENCODING_PCM_16BIT
             )
 
-            audioTrack = AudioTrack.Builder()
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                .setAudioFormat(
-                    AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(sampleRate)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                        .build()
-                )
-                .setBufferSizeInBytes(bufferSize.coerceAtLeast(audioData.size * 2))
-                .setTransferMode(AudioTrack.MODE_STATIC)
+            val attributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+            val format = AudioFormat.Builder()
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                .setSampleRate(sampleRate)
+                .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                 .build()
 
+            audioTrack = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                AudioTrack.Builder()
+                    .setAudioAttributes(attributes)
+                    .setAudioFormat(format)
+                    .setBufferSizeInBytes(bufferSize.coerceAtLeast(audioData.size * 2))
+                    .setTransferMode(AudioTrack.MODE_STATIC)
+                    .build()
+            } else {
+                AudioTrack(
+                    attributes,
+                    format,
+                    bufferSize.coerceAtLeast(audioData.size * 2),
+                    AudioTrack.MODE_STATIC,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
+                )
+            }
+
             audioTrack?.apply {
-                write(audioData, 0, audioData.size, AudioTrack.WRITE_BLOCKING)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    write(audioData, 0, audioData.size, AudioTrack.WRITE_BLOCKING)
+                } else {
+                    write(audioData, 0, audioData.size)
+                }
                 play()
             }
         }

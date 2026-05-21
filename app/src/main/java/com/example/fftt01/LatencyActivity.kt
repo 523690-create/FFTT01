@@ -37,6 +37,11 @@ class LatencyActivity : AppCompatActivity() {
     }
 
     private fun runLatencyTest() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.RECORD_AUDIO), 1)
+            return
+        }
+
         btnMeasure.isEnabled = false
         txtResult.text = "Measuring..."
 
@@ -63,13 +68,22 @@ class LatencyActivity : AppCompatActivity() {
                     .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                     .build()
 
-                val player = AudioTrack(
-                    attributes,
-                    format,
-                    chirp.size * 4,
-                    AudioTrack.MODE_STATIC,
-                    AudioManager.AUDIO_SESSION_ID_GENERATE
-                )
+                val player = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    AudioTrack.Builder()
+                        .setAudioAttributes(attributes)
+                        .setAudioFormat(format)
+                        .setBufferSizeInBytes(chirp.size * 4)
+                        .setTransferMode(AudioTrack.MODE_STATIC)
+                        .build()
+                } else {
+                    AudioTrack(
+                        attributes,
+                        format,
+                        chirp.size * 4,
+                        AudioTrack.MODE_STATIC,
+                        AudioManager.AUDIO_SESSION_ID_GENERATE
+                    )
+                }
 
                 player.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
 
@@ -78,7 +92,20 @@ class LatencyActivity : AppCompatActivity() {
                 
                 var totalRead = 0
                 while (totalRead < bufferSize) {
-                    val read = recorder.read(recorded, totalRead, bufferSize - totalRead, AudioRecord.READ_BLOCKING)
+                    val read = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        recorder.read(recorded, totalRead, bufferSize - totalRead, AudioRecord.READ_BLOCKING)
+                    } else {
+                        // Fallback for API 21-22: Read as short and convert, or use ByteBuffer
+                        // For simplicity in this latency test, we can use short read
+                        val shortBuffer = ShortArray(bufferSize - totalRead)
+                        val sRead = recorder.read(shortBuffer, 0, shortBuffer.size)
+                        if (sRead > 0) {
+                            for (i in 0 until sRead) {
+                                recorded[totalRead + i] = shortBuffer[i] / 32768f
+                            }
+                        }
+                        sRead
+                    }
                     if (read > 0) totalRead += read else break
                 }
 
@@ -89,7 +116,7 @@ class LatencyActivity : AppCompatActivity() {
 
                 val latencyMs = calculateLatency(chirp, recorded)
                 runOnUiThread {
-                    txtResult.text = "Result: ${String.format("%.2f", latencyMs)} ms"
+                    txtResult.text = "Result: ${String.format(java.util.Locale.US, "%.2f", latencyMs)} ms"
                     btnMeasure.isEnabled = true
                 }
 
