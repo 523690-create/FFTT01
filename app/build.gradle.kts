@@ -1,5 +1,6 @@
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
@@ -36,16 +37,18 @@ android {
     }
 }
 
-// Rename APK
-project.afterEvaluate {
-    val extension = project.extensions.getByName("android")
-    if (extension is com.android.build.gradle.AppExtension) {
-        extension.applicationVariants.all {
-            outputs.all {
-                if (this is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                    val timestamp = SimpleDateFormat("yyyyMMdd-HHmm").format(Date())
-                    outputFileName = "FFTT01-$timestamp.apk"
-                }
+// Rename and copy APK to project root after build
+val rootPathStr = project.rootDir.absolutePath
+tasks.withType<com.android.build.gradle.tasks.PackageApplication>().configureEach {
+    val captureRoot = rootPathStr
+    doLast {
+        val timestamp = SimpleDateFormat("yyyyMMdd-HHmmss").format(Date())
+        val fileName = "FFTT01-$timestamp.apk"
+        outputDirectory.get().asFile.listFiles()?.forEach { file ->
+            if (file.name.endsWith(".apk")) {
+                val destFile = File(captureRoot, fileName)
+                file.copyTo(destFile, overwrite = true)
+                println("Generated APK in root: ${destFile.absolutePath}")
             }
         }
     }
