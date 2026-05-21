@@ -322,6 +322,13 @@ class FFTHeatMapView @JvmOverloads constructor(
         return true
     }
 
+    private val bitmapPaint = Paint().apply {
+        isFilterBitmap = true
+        isAntiAlias = true
+    }
+    private val srcRect = Rect()
+    private val dstRect = RectF()
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val bitmap = spectrogramBitmap ?: return
@@ -331,11 +338,6 @@ class FFTHeatMapView @JvmOverloads constructor(
         canvas.save()
         canvas.translate(offsetX, offsetY)
         canvas.scale(zoomFactorX, zoomFactorY)
-
-        val paint = Paint().apply {
-            isFilterBitmap = true
-            isAntiAlias = true
-        }
 
         synchronized(bitmap) {
             if (blurRadius > 0) {
@@ -348,32 +350,34 @@ class FFTHeatMapView @JvmOverloads constructor(
                 val blurredBitmap = Bitmap.createScaledBitmap(bitmap, bw, bh, true)
                 
                 if (isFrozen) {
-                    canvas.drawBitmap(blurredBitmap, null, RectF(0f, 0f, w, h), paint)
+                    dstRect.set(0f, 0f, w, h)
+                    canvas.drawBitmap(blurredBitmap, null, dstRect, bitmapPaint)
                 } else {
                     val bW = blurredBitmap.width
                     val drawCol = (currentColumn.toFloat() / maxHistory * bW).toInt()
                     
                     val splitX = (drawCol + 1).toFloat() / bW * w
-                    val src1 = Rect(drawCol + 1, 0, bW, blurredBitmap.height)
-                    val dst1 = RectF(0f, 0f, w - splitX, h)
-                    canvas.drawBitmap(blurredBitmap, src1, dst1, paint)
+                    srcRect.set(drawCol + 1, 0, bW, blurredBitmap.height)
+                    dstRect.set(0f, 0f, w - splitX, h)
+                    canvas.drawBitmap(blurredBitmap, srcRect, dstRect, bitmapPaint)
                     
-                    val src2 = Rect(0, 0, drawCol + 1, blurredBitmap.height)
-                    val dst2 = RectF(w - splitX, 0f, w, h)
-                    canvas.drawBitmap(blurredBitmap, src2, dst2, paint)
+                    srcRect.set(0, 0, drawCol + 1, blurredBitmap.height)
+                    dstRect.set(w - splitX, 0f, w, h)
+                    canvas.drawBitmap(blurredBitmap, srcRect, dstRect, bitmapPaint)
                 }
             } else {
                 if (isFrozen) {
-                    canvas.drawBitmap(bitmap, null, RectF(0f, 0f, w, h), paint)
+                    dstRect.set(0f, 0f, w, h)
+                    canvas.drawBitmap(bitmap, null, dstRect, bitmapPaint)
                 } else {
                     val splitX = (currentColumn + 1).toFloat() / maxHistory * w
-                    val src1 = Rect(currentColumn + 1, 0, maxHistory, bitmap.height)
-                    val dst1 = RectF(0f, 0f, w - splitX, h)
-                    canvas.drawBitmap(bitmap, src1, dst1, paint)
+                    srcRect.set(currentColumn + 1, 0, maxHistory, bitmap.height)
+                    dstRect.set(0f, 0f, w - splitX, h)
+                    canvas.drawBitmap(bitmap, srcRect, dstRect, bitmapPaint)
                     
-                    val src2 = Rect(0, 0, currentColumn + 1, bitmap.height)
-                    val dst2 = RectF(w - splitX, 0f, w, h)
-                    canvas.drawBitmap(bitmap, src2, dst2, paint)
+                    srcRect.set(0, 0, currentColumn + 1, bitmap.height)
+                    dstRect.set(w - splitX, 0f, w, h)
+                    canvas.drawBitmap(bitmap, srcRect, dstRect, bitmapPaint)
                 }
             }
         }

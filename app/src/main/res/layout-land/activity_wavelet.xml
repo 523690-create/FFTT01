@@ -13,26 +13,26 @@
     <Button android:id="@+id/btnWaveletStop" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Exhaustive stubs for WaveletActivity -->
-    <Spinner android:id="@+id/waveletFamilySpinner" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <Spinner android:id="@+id/waveletBoundarySpinner" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <CheckBox android:id="@+id/checkSoftThresh" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <CheckBox android:id="@+id/checkWPT" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <CheckBox android:id="@+id/checkLogScale" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <CheckBox android:id="@+id/checkLocalNorm" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <CheckBox android:id="@+id/checkReconstruct" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <CheckBox android:id="@+id/checkCWT" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <Spinner android:id="@+id/waveletFamilySpinner" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <Spinner android:id="@+id/waveletBoundarySpinner" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <CheckBox android:id="@+id/checkSoftThresh" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <CheckBox android:id="@+id/checkWPT" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <CheckBox android:id="@+id/checkLogScale" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <CheckBox android:id="@+id/checkLocalNorm" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <CheckBox android:id="@+id/checkReconstruct" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <CheckBox android:id="@+id/checkCWT" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
 
-    <com.google.android.material.slider.Slider android:id="@+id/sliderOrder" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <com.google.android.material.slider.Slider android:id="@+id/sliderLevel" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <com.google.android.material.slider.Slider android:id="@+id/sliderSampling" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <com.google.android.material.slider.Slider android:id="@+id/sliderThreshold" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <com.google.android.material.slider.Slider android:id="@+id/sliderColor" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <com.google.android.material.slider.Slider android:id="@+id/sliderOrder" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:valueFrom="0.0" android:valueTo="10.0" android:value="0.0" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <com.google.android.material.slider.Slider android:id="@+id/sliderLevel" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:valueFrom="0.0" android:valueTo="10.0" android:value="0.0" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <com.google.android.material.slider.Slider android:id="@+id/sliderSampling" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:valueFrom="0.0" android:valueTo="44100.0" android:value="0.0" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <com.google.android.material.slider.Slider android:id="@+id/sliderThreshold" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:valueFrom="0.0" android:valueTo="1.0" android:value="0.0" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <com.google.android.material.slider.Slider android:id="@+id/sliderColor" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:valueFrom="0.0" android:valueTo="3.0" android:value="0.0" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
 
-    <TextView android:id="@+id/txtLevelValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/txtOrderValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/txtSamplingValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/txtThresholdValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/txtColorValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/txtLevelValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <TextView android:id="@+id/txtOrderValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <TextView android:id="@+id/txtSamplingValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <TextView android:id="@+id/txtThresholdValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <TextView android:id="@+id/txtColorValue" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Map Area: Square 1:1, centered horizontally, full height -->
     <com.example.fftt01.WaveletView
