@@ -26,16 +26,30 @@ class WaveletView @JvmOverloads constructor(
     
     private val progressPaint = Paint().apply {
         color = Color.WHITE
-        alpha = 128
-        style = Paint.Style.FILL
+        alpha = 255
+        style = Paint.Style.STROKE
+        strokeWidth = 4f * context.resources.displayMetrics.density
+        strokeCap = Paint.Cap.ROUND
         isAntiAlias = true
     }
     
     private val progressBgPaint = Paint().apply {
-        color = Color.BLACK
+        color = Color.WHITE
         alpha = 64
-        style = Paint.Style.FILL
+        style = Paint.Style.STROKE
+        strokeWidth = 4f * context.resources.displayMetrics.density
         isAntiAlias = true
+    }
+
+    private var spinAngle = 0f
+    private val spinRunnable = object : Runnable {
+        override fun run() {
+            if (isCalculating) {
+                spinAngle = (spinAngle + 10f) % 360f
+                invalidate()
+                postDelayed(this, 30)
+            }
+        }
     }
 
     private val progressRect = RectF()
@@ -156,13 +170,21 @@ class WaveletView @JvmOverloads constructor(
     
     fun setProgress(value: Float) {
         progress = value.coerceIn(0f, 1f)
-        isCalculating = progress < 1f && progress > 0f
+        if (progress > 0f && progress < 1f) {
+            if (!isCalculating) setCalculating(true)
+        }
         invalidate()
     }
     
     fun setCalculating(calculating: Boolean) {
         isCalculating = calculating
-        if (!calculating) progress = 0f
+        if (calculating) {
+            removeCallbacks(spinRunnable)
+            post(spinRunnable)
+        } else {
+            removeCallbacks(spinRunnable)
+            progress = 0f
+        }
         invalidate()
     }
 
@@ -382,10 +404,15 @@ class WaveletView @JvmOverloads constructor(
         if (isCalculating) {
             val cx = width / 2f
             val cy = height / 2f
-            val radius = Math.min(width, height) / 4f
+            val radius = Math.min(width, height) / 8f
             progressRect.set(cx - radius, cy - radius, cx + radius, cy + radius)
             canvas.drawCircle(cx, cy, radius, progressBgPaint)
-            canvas.drawArc(progressRect, -90f, progress * 360f, true, progressPaint)
+            
+            if (progress > 0f) {
+                canvas.drawArc(progressRect, -90f + spinAngle, progress * 360f, false, progressPaint)
+            } else {
+                canvas.drawArc(progressRect, spinAngle, 90f, false, progressPaint)
+            }
         }
     }
 

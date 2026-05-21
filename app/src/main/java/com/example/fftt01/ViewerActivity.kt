@@ -850,6 +850,7 @@ class ViewerActivity : AppCompatActivity() {
             slider.setHaloTintList(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
             slider.thumbRadius = (thickness / 2f).toInt()
             slider.trackHeight = thickness.toInt()
+            slider.haloRadius = 0
             
             // Set text box appearance
             label?.let {

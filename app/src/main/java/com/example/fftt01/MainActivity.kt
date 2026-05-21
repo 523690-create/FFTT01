@@ -514,6 +514,8 @@ class MainActivity : AppCompatActivity() {
             // Set slider to be invisible but interactive
             slider.trackActiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             slider.trackInactiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            slider.thumbTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            slider.haloTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             slider.thumbRadius = (thickness / 2f).toInt()
             slider.trackHeight = thickness.toInt()
             slider.haloRadius = 0

@@ -143,8 +143,14 @@ class WaveletActivity : AppCompatActivity() {
             val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
             
             if (thickness > 0) {
+                slider.trackActiveTintList = android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
+                slider.trackInactiveTintList = android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
+                slider.thumbTintList = android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
+                slider.haloTintList = android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
+                
                 slider.trackHeight = thickness.toInt()
                 slider.thumbRadius = (thickness / 2f).toInt()
+                slider.haloRadius = 0
                 
                 label?.let {
                     it.setBackgroundColor(Color.WHITE)
