@@ -18,6 +18,7 @@
         android:layout_marginBottom="8dp">
 
         <TextView
+            android:id="@+id/txtTitleGallery"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -40,10 +41,10 @@
             android:id="@+id/btnBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/btn_listen"
+            android:text="@string/btn_back"
             android:backgroundTint="#00FFFF"
             android:textColor="#000000"
-            android:textSize="@dimen/font_button"
+            android:textSize="@dimen/font_control_small"
             android:textStyle="bold"
             style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
 

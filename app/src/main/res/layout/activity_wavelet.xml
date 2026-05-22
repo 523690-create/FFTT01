@@ -20,6 +20,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
+            android:id="@+id/txtTitleWavelet"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -39,7 +40,7 @@
             android:text="@string/btn_gallery"
             android:backgroundTint="#FFFF00"
             android:textColor="#000000"
-            android:textSize="@dimen/font_button"
+            android:textSize="@dimen/font_control_small"
             android:textStyle="bold"
             android:layout_marginEnd="4dp"
             android:minWidth="0dp"
@@ -50,10 +51,10 @@
             android:id="@+id/btnWaveletListenTop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="LISTEN"
+            android:text="@string/btn_back"
             android:backgroundTint="#00FFFF"
             android:textColor="#000000"
-            android:textSize="@dimen/font_button"
+            android:textSize="@dimen/font_control_small"
             android:textStyle="bold"
             android:minWidth="0dp"
             android:paddingHorizontal="8dp"
@@ -65,228 +66,134 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#111111"
-        app:layout_constraintBottom_toTopOf="@+id/waveletGuideline"
+        app:layout_constraintBottom_toTopOf="@+id/waveletControlGuide"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/waveletGuideline"
+        android:id="@+id/waveletControlGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.45" />
+        app:layout_constraintGuide_percent="0.65" />
 
     <LinearLayout
-        android:id="@+id/waveletControls"
+        android:id="@+id/waveletControlsRoot"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:background="#222222"
-        android:weightSum="100"
+        android:padding="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/waveletGuideline">
+        app:layout_constraintTop_toBottomOf="@+id/waveletControlGuide">
 
-        <!-- Left Side: 4 Sliders (60%) -->
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="60"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="4dp"
-            android:weightSum="4">
-
-            <!-- Level Slider -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_lvl" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
-                <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/sliderLevel"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:valueFrom="1.0"
-                        android:valueTo="8.0"
-                        android:value="4.0"
-                        android:stepSize="1.0"
-                        android:orientation="vertical"
-                        app:labelBehavior="gone"
-                        app:trackHeight="@dimen/slider_track_height"
-                        app:thumbRadius="0dp"
-                        app:thumbColor="@android:color/transparent"
-                        app:trackColorActive="#00FFFF"
-                        app:trackColorInactive="#333333"
-                        android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtLevelValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="4" android:textColor="#000000" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
-                </FrameLayout>
-            </LinearLayout>
-
-            <!-- Order Slider -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_ord" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
-                <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/sliderOrder"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:valueFrom="1.0"
-                        android:valueTo="10.0"
-                        android:value="1.0"
-                        android:stepSize="1.0"
-                        android:orientation="vertical"
-                        app:labelBehavior="gone"
-                        app:trackHeight="@dimen/slider_track_height"
-                        app:thumbRadius="0dp"
-                        app:thumbColor="@android:color/transparent"
-                        app:trackColorActive="#00FFFF"
-                        app:trackColorInactive="#333333"
-                        android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtOrderValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1" android:textColor="#000000" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
-                </FrameLayout>
-            </LinearLayout>
-
-            <!-- Sampling Slider -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_fs" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
-                <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/sliderSampling"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:valueFrom="1000.0"
-                        android:valueTo="44100.0"
-                        android:value="44100.0"
-                        android:stepSize="1.0"
-                        android:orientation="vertical"
-                        app:labelBehavior="gone"
-                        app:trackHeight="@dimen/slider_track_height"
-                        app:thumbRadius="0dp"
-                        app:thumbColor="@android:color/transparent"
-                        app:trackColorActive="#AAAAAA"
-                        app:trackColorInactive="#333333"
-                        android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtSamplingValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="44k" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
-                </FrameLayout>
-            </LinearLayout>
-
-            <!-- Threshold Slider -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-                <TextView android:layout_width="match_parent" android:layout_height="24dp" android:text="@string/label_thr" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:includeFontPadding="false" android:gravity="center"/>
-                <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/sliderThreshold"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:valueFrom="0.0"
-                        android:valueTo="1.0"
-                        android:value="0.1"
-                        android:stepSize="0.001"
-                        android:orientation="vertical"
-                        app:labelBehavior="gone"
-                        app:trackHeight="@dimen/slider_track_height"
-                        app:thumbRadius="0dp"
-                        app:thumbColor="@android:color/transparent"
-                        app:trackColorActive="#FF00FF"
-                        app:trackColorInactive="#333333"
-                        android:layout_gravity="center" />
-                    <TextView android:id="@+id/txtThresholdValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0.1" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:includeFontPadding="false" android:gravity="center"/>
-                </FrameLayout>
-            </LinearLayout>
+            android:gravity="center_vertical"
+            android:weightSum="6">
+            <CheckBox android:id="@+id/checkSoftThresh" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/label_soft" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+            <CheckBox android:id="@+id/checkWPT" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/label_wpt" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+            <CheckBox android:id="@+id/checkCWT" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/label_cwt" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+            <CheckBox android:id="@+id/checkLogScale" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/label_log" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+            <CheckBox android:id="@+id/checkLocalNorm" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/label_lnorm" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+            <CheckBox android:id="@+id/checkReconstruct" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/label_recon" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
         </LinearLayout>
 
-        <!-- Right Side: Spinners and Buttons (40%) -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="40"
-            android:orientation="vertical"
-            android:padding="4dp"
-            android:gravity="center_horizontal">
+            android:orientation="horizontal"
+            android:weightSum="100">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_fam" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_marginEnd="4dp"/>
-                <Spinner
-                    android:id="@+id/waveletFamilySpinner"
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/spinner_height"
-                    android:layout_weight="1"
-                    android:backgroundTint="#FFFFFF" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_bnd" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_marginEnd="4dp"/>
-                <Spinner
-                    android:id="@+id/waveletBoundarySpinner"
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/spinner_height"
-                    android:layout_weight="1"
-                    android:backgroundTint="#FFFFFF" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_color" android:textColor="#FFFF00" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_marginEnd="4dp"/>
-                <Spinner
-                    android:id="@+id/waveletColorSpinner"
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/spinner_height"
-                    android:layout_weight="1"
-                    android:backgroundTint="#FFFFFF" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btnWaveletBack"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="FFT"
-                android:backgroundTint="#FFA500"
-                android:textColor="#000000"
-                android:textSize="@dimen/font_button"
-                android:textStyle="bold"
-                android:layout_marginTop="4dp" />
-
-            <!-- Checkboxes Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="60"
                 android:orientation="horizontal"
-                android:gravity="center"
-                android:paddingTop="4dp">
-                <CheckBox android:id="@+id/checkSoftThresh" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_soft" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
-                <CheckBox android:id="@+id/checkWPT" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_wpt" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
-                <CheckBox android:id="@+id/checkCWT" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_cwt" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
-                <CheckBox android:id="@+id/checkLogScale" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_log" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
-                <CheckBox android:id="@+id/checkLocalNorm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_lnorm" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
-                <CheckBox android:id="@+id/checkReconstruct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_recon" android:textColor="#FFFFFF" android:buttonTint="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:padding="0dp"/>
+                android:weightSum="4">
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="20dp" android:text="@string/label_lvl" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:gravity="center" android:includeFontPadding="false"/>
+                    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+                        <com.google.android.material.slider.Slider android:id="@+id/sliderLevel" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="1.0" android:valueTo="8.0" android:value="4.0" android:stepSize="1.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="@dimen/slider_track_height" app:thumbRadius="0dp" app:thumbColor="@android:color/transparent" app:trackColorActive="#00FFFF" app:trackColorInactive="#333333"/>
+                        <TextView android:id="@+id/txtLevelValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="4" android:textColor="#000000" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:gravity="center" android:includeFontPadding="false"/>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="20dp" android:text="@string/label_ord" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:gravity="center" android:includeFontPadding="false"/>
+                    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+                        <com.google.android.material.slider.Slider android:id="@+id/sliderOrder" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="1.0" android:valueTo="10.0" android:value="1.0" android:stepSize="1.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="@dimen/slider_track_height" app:thumbRadius="0dp" app:thumbColor="@android:color/transparent" app:trackColorActive="#00FFFF" app:trackColorInactive="#333333"/>
+                        <TextView android:id="@+id/txtOrderValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1" android:textColor="#000000" android:textSize="@dimen/font_label_small" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:gravity="center" android:includeFontPadding="false"/>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="20dp" android:text="@string/label_fs" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:gravity="center" android:includeFontPadding="false"/>
+                    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+                        <com.google.android.material.slider.Slider android:id="@+id/sliderSampling" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="1000.0" android:valueTo="44100.0" android:value="44100.0" android:stepSize="1.0" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="@dimen/slider_track_height" app:thumbRadius="0dp" app:thumbColor="@android:color/transparent" app:trackColorActive="#AAAAAA" app:trackColorInactive="#333333"/>
+                        <TextView android:id="@+id/txtSamplingValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="44k" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:gravity="center" android:includeFontPadding="false"/>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="20dp" android:text="@string/label_thr" android:textColor="#FFFFFF" android:textSize="@dimen/font_label_tiny" android:gravity="center" android:includeFontPadding="false"/>
+                    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+                        <com.google.android.material.slider.Slider android:id="@+id/sliderThreshold" android:layout_width="match_parent" android:layout_height="match_parent" android:valueFrom="0.0" android:valueTo="1.0" android:value="0.1" android:stepSize="0.001" android:orientation="vertical" app:labelBehavior="gone" app:trackHeight="@dimen/slider_track_height" app:thumbRadius="0dp" app:thumbColor="@android:color/transparent" app:trackColorActive="#FF00FF" app:trackColorInactive="#333333"/>
+                        <TextView android:id="@+id/txtThresholdValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0.1" android:textColor="#000000" android:textSize="@dimen/font_label_tiny" android:textStyle="bold" android:layout_gravity="center" android:elevation="4dp" android:gravity="center" android:includeFontPadding="false"/>
+                    </FrameLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="40"
+                android:orientation="vertical"
+                android:padding="2dp"
+                android:gravity="center">
+
+                <Spinner android:id="@+id/waveletFamilySpinner" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:backgroundTint="#FFFFFF" android:overlapAnchor="false" />
+                <Spinner android:id="@+id/waveletBoundarySpinner" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:backgroundTint="#FFFFFF" android:overlapAnchor="false" />
+                <Spinner android:id="@+id/waveletColorSpinner" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:backgroundTint="#FFFFFF" android:overlapAnchor="false" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1.2"
+                    android:orientation="horizontal">
+                    <Button
+                        android:id="@+id/btnWaveletBack"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="FFT"
+                        android:backgroundTint="#FFA500"
+                        android:textColor="#000000"
+                        android:textSize="@dimen/font_control_large"
+                        android:textStyle="bold"
+                        android:insetTop="2dp"
+                        android:insetBottom="2dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                    <Button
+                        android:id="@+id/btnWaveletStop"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="STOP"
+                        android:backgroundTint="#FF0000"
+                        android:textColor="#FFFFFF"
+                        android:textSize="@dimen/font_control_large"
+                        android:textStyle="bold"
+                        android:insetTop="2dp"
+                        android:insetBottom="2dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -17,7 +17,7 @@
     <string name="btn_gallery">GALLERY</string>
     <string name="btn_quit">QUIT</string>
     <string name="btn_play">PLAY</string>
-    <string name="btn_wave">WAVE</string>
+    <string name="btn_wave">Wavelet</string>
     <string name="btn_filter">FILTER</string>
     <string name="btn_eq">EQ</string>
     <string name="sweep_off">SWEEP\nOFF</string>
@@ -28,9 +28,9 @@
     <string name="label_0db">0\ndB</string>
     <string name="label_0pct">0\n%%</string>
     <string name="label_0ms">0\nms</string>
-    <string name="title_listening">FFT Listening</string>
-    <string name="title_gallery">FFT Gallery</string>
-    <string name="title_analysis">FFT</string>
+    <string name="title_listening">Listening</string>
+    <string name="title_gallery">Gallery</string>
+    <string name="title_analysis"></string>
     <string name="title_wavelet">Wavelet Analysis</string>
     <string name="label_blur">Blur:%1$d</string>
     <string name="btn_view_toggle">Toggle View</string>
@@ -60,4 +60,9 @@
     <string name="fft_step_value">%1$d</string>
     <string name="khz_value">%1$d\nkHz</string>
     <string name="hz_value">%1$d\nHz</string>
+    <string name="label_color_simple">Color</string>
+    <string name="label_mic_simple">Mic</string>
+    <string name="label_size_simple">Size</string>
+    <string name="label_step_simple">Step</string>
+    <string name="label_blur_simple">Blur</string>
 </resources>

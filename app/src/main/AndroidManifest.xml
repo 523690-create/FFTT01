@@ -19,6 +19,7 @@
             android:name=".MainActivity"
             android:theme="@style/Theme.FFTT01.NoOverdraw"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:label="@string/title_listening">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,24 +31,28 @@
             android:name=".GalleryActivity"
             android:theme="@style/Theme.FFTT01.NoOverdraw"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:label="@string/title_gallery" />
 
         <activity
             android:name=".ViewerActivity"
             android:theme="@style/Theme.FFTT01.NoOverdraw"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:label="@string/title_analysis" />
 
         <activity
             android:name=".WaveletActivity"
             android:theme="@style/Theme.FFTT01.NoOverdraw"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:label="@string/title_wavelet" />
 
         <activity
             android:name=".LatencyActivity"
             android:theme="@style/Theme.FFTT01.NoOverdraw"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
     </application>
 

@@ -2,10 +2,10 @@ package com.example.fftt01
 
 import android.content.pm.PackageManager
 import android.media.*
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -34,118 +34,112 @@ class LatencyActivity : AppCompatActivity() {
                 runLatencyTest()
             }
         }
+        
+        UiUtils.autoScaleText(findViewById(R.id.txtTitleLatency))
+        UiUtils.autoScaleText(btnMeasure)
+        UiUtils.autoScaleText(findViewById(R.id.btnLatencyBack))
+        UiUtils.autoScaleText(txtResult)
     }
 
     private fun runLatencyTest() {
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.RECORD_AUDIO), 1)
             return
         }
 
         btnMeasure.isEnabled = false
-        txtResult.setText(R.string.latency_measuring)
+        txtResult.text = getString(R.string.latency_measuring)
+        UiUtils.autoScaleText(txtResult)
 
         Thread {
-            try {
-                val chirp = generateChirp()
-                val recorded = FloatArray(bufferSize)
-                
-                val recorder = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    AudioRecord(
-                        MediaRecorder.AudioSource.MIC,
-                        sampleRate,
-                        AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_FLOAT,
-                        AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT).coerceAtLeast(bufferSize * 4)
-                    )
-                } else {
-                    AudioRecord(
-                        MediaRecorder.AudioSource.MIC,
-                        sampleRate,
-                        AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT,
-                        AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT).coerceAtLeast(bufferSize * 2)
-                    )
+            val chirp = generateChirp()
+            
+            val attributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            
+            val encoding = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AudioFormat.ENCODING_PCM_FLOAT else AudioFormat.ENCODING_PCM_16BIT
+            
+            val format = AudioFormat.Builder()
+                .setEncoding(encoding)
+                .setSampleRate(sampleRate)
+                .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                .build()
+
+            val audioTrack = AudioTrack(
+                attributes,
+                format,
+                chirp.size * (if (encoding == AudioFormat.ENCODING_PCM_FLOAT) 4 else 2),
+                AudioTrack.MODE_STATIC,
+                AudioManager.AUDIO_SESSION_ID_GENERATE
+            )
+
+            val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, encoding)
+            val record = AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                encoding,
+                max(minBufferSize, bufferSize * (if (encoding == AudioFormat.ENCODING_PCM_FLOAT) 4 else 2))
+            )
+
+            if (record.state != AudioRecord.STATE_INITIALIZED) {
+                runOnUiThread {
+                    txtResult.text = getString(R.string.latency_error)
+                    UiUtils.autoScaleText(txtResult)
+                    btnMeasure.isEnabled = true
                 }
+                return@Thread
+            }
 
-                val attributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
+            val recordedData = FloatArray(bufferSize)
+            
+            if (encoding == AudioFormat.ENCODING_PCM_FLOAT && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                audioTrack.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
+            } else {
+                val shortChirp = ShortArray(chirp.size) { i -> (chirp[i] * 32767).toInt().toShort() }
+                audioTrack.write(shortChirp, 0, shortChirp.size)
+            }
+            
+            record.startRecording()
+            audioTrack.play()
 
-                val player = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    AudioTrack.Builder()
-                        .setAudioAttributes(attributes)
-                        .setAudioFormat(AudioFormat.Builder()
-                            .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
-                            .setSampleRate(sampleRate)
-                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                            .build())
-                        .setBufferSizeInBytes(chirp.size * 4)
-                        .setTransferMode(AudioTrack.MODE_STATIC)
-                        .build()
-                } else {
-                    AudioTrack(
-                        attributes,
-                        AudioFormat.Builder()
-                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                            .setSampleRate(sampleRate)
-                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                            .build(),
-                        chirp.size * 2,
-                        AudioTrack.MODE_STATIC,
-                        AudioManager.AUDIO_SESSION_ID_GENERATE
-                    )
-                }
-
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    player.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
-                } else {
-                    val shortChirp = ShortArray(chirp.size)
-                    for (i in chirp.indices) {
-                        shortChirp[i] = (chirp[i] * 32767).toInt().toShort()
-                    }
-                    player.write(shortChirp, 0, shortChirp.size)
-                }
-
-                recorder.startRecording()
-                player.play()
-                
+            if (encoding == AudioFormat.ENCODING_PCM_FLOAT && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 var totalRead = 0
                 while (totalRead < bufferSize) {
-                    val read = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                        recorder.read(recorded, totalRead, bufferSize - totalRead, AudioRecord.READ_BLOCKING)
-                    } else {
-                        val shortBuffer = ShortArray(bufferSize - totalRead)
-                        val sRead = recorder.read(shortBuffer, 0, shortBuffer.size)
-                        if (sRead > 0) {
-                            for (i in 0 until sRead) {
-                                recorded[totalRead + i] = shortBuffer[i] / 32768f
-                            }
+                    val read = record.read(recordedData, totalRead, bufferSize - totalRead, AudioRecord.READ_BLOCKING)
+                    if (read > 0) totalRead += read
+                    else break
+                }
+            } else {
+                val shortBuffer = ShortArray(bufferSize)
+                var totalRead = 0
+                while (totalRead < bufferSize) {
+                    val read = record.read(shortBuffer, totalRead, bufferSize - totalRead)
+                    if (read > 0) {
+                        for (i in 0 until read) {
+                            recordedData[totalRead + i] = shortBuffer[totalRead + i] / 32768f
                         }
-                        sRead
-                    }
-                    if (read > 0) totalRead += read else break
+                        totalRead += read
+                    } else break
                 }
+            }
 
-                recorder.stop()
-                recorder.release()
-                player.stop()
-                player.release()
+            audioTrack.stop()
+            record.stop()
+            audioTrack.release()
+            record.release()
 
-                val latencyMs = calculateLatency(chirp, recorded)
-                runOnUiThread {
+            val latencyMs = calculateLatency(chirp, recordedData)
+            
+            runOnUiThread {
+                if (latencyMs >= 0) {
                     txtResult.text = getString(R.string.latency_result, latencyMs)
-                    btnMeasure.isEnabled = true
+                } else {
+                    txtResult.text = getString(R.string.latency_error)
                 }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread {
-                    Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    btnMeasure.isEnabled = true
-                    txtResult.setText(R.string.latency_error)
-                }
+                UiUtils.autoScaleText(txtResult)
+                btnMeasure.isEnabled = true
             }
         }.start()
     }
@@ -159,33 +153,32 @@ class LatencyActivity : AppCompatActivity() {
         
         for (i in 0 until numSamples) {
             val t = i.toFloat() / sampleRate
-            // Exponential chirp
             val k = (f1 / f0).pow(1f / t1)
             val phase = 2f * PI.toFloat() * f0 * (k.pow(t) - 1f) / ln(k)
-            chirp[i] = sin(phase) * (0.5f * (1f - cos(2f * PI.toFloat() * i / (numSamples - 1)))) // Hann windowed chirp
+            // Hamming window
+            val window = 0.54f - 0.46f * cos(2f * PI.toFloat() * i / (numSamples - 1))
+            chirp[i] = sin(phase) * window
         }
         return chirp
     }
 
     private fun calculateLatency(chirp: FloatArray, recorded: FloatArray): Float {
-        // Cross-correlation
-        val n = recorded.size
-        val m = chirp.size
         var maxCorr = -1f
-        var maxLag = 0
-
-        // Coarse search to save time/CPU
-        for (lag in 0 until n - m) {
+        var maxLag = -1
+        
+        val searchLimit = min(recorded.size - chirp.size, sampleRate / 2)
+        
+        for (lag in 0 until searchLimit) {
             var corr = 0f
-            for (i in 0 until m) {
-                corr += recorded[lag + i] * chirp[i]
+            for (i in chirp.indices) {
+                corr += chirp[i] * recorded[lag + i]
             }
             if (corr > maxCorr) {
                 maxCorr = corr
                 maxLag = lag
             }
         }
-
-        return (maxLag.toFloat() / sampleRate) * 1000f
+        
+        return if (maxLag >= 0) (maxLag.toFloat() / sampleRate) * 1000f else -1f
     }
 }

@@ -85,7 +85,7 @@ class FFTHeatMapView @JvmOverloads constructor(
     private var lastTouchY = 0f
 
     // Color schemes
-    private val colorSchemes = arrayOf(
+    val colorSchemes = arrayOf(
         intArrayOf( // 0: Heat (Original 7-color)
             Color.parseColor("#4B0082"), // Indigo
             Color.BLUE,
@@ -205,6 +205,26 @@ class FFTHeatMapView @JvmOverloads constructor(
         currentColumn = 0
         framesProcessed = 0L
         spectrogramBitmap?.eraseColor(Color.TRANSPARENT)
+        invalidate()
+    }
+
+    fun setFullHistory(history: List<FloatArray>) {
+        if (spectrogramBitmap == null || history.isEmpty()) return
+        val bmp = spectrogramBitmap!!
+        bmp.eraseColor(Color.TRANSPARENT)
+        
+        val start = (history.size - maxHistory).coerceAtLeast(0)
+        for (i in start until history.size) {
+            val magnitudes = history[i]
+            val x = (i - start) % maxHistory
+            for (y in 0 until bmp.height) {
+                val bin = yToBinMapping?.get(y) ?: 0
+                val mag = magnitudes.getOrNull(bin) ?: 0f
+                bmp.setPixel(x, bmp.height - 1 - y, getColorForValue(mag))
+            }
+        }
+        currentColumn = (history.size - start) % maxHistory
+        framesProcessed = history.size.toLong()
         invalidate()
     }
 

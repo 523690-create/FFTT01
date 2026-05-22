@@ -1,6 +1,7 @@
 package com.example.fftt01
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,19 +25,19 @@ class GalleryActivity : AppCompatActivity() {
     private lateinit var btnViewToggle: ImageButton
     private var isGridView = false
     private var files = mutableListOf<File>()
+    private lateinit var prefs: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_gallery)
 
-        val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
+        prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
         isGridView = prefs.getBoolean("gallery_is_grid", false)
 
         recyclerView = findViewById(R.id.recyclerView)
         btnViewToggle = findViewById(R.id.btnViewToggle)
 
         updateLayoutManager()
-
         loadFiles()
 
         btnViewToggle.setOnClickListener {
@@ -49,6 +50,9 @@ class GalleryActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnBack).setOnClickListener {
             finish()
         }
+        UiUtils.autoScaleText(findViewById(R.id.txtTitleGallery))
+        UiUtils.autoScaleText(findViewById(R.id.btnBack))
+        UiUtils.autoScaleText(findViewById(R.id.btnViewToggle))
     }
 
     private fun loadFiles() {
@@ -60,28 +64,27 @@ class GalleryActivity : AppCompatActivity() {
     }
 
     private fun updateLayoutManager() {
-        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-        if (isGridView || isLandscape) {
+        if (isGridView) {
             recyclerView.layoutManager = GridLayoutManager(this, 3)
-            btnViewToggle.setImageResource(R.drawable.ic_view_list)
+            btnViewToggle.setImageResource(android.R.drawable.ic_menu_sort_by_size)
         } else {
             recyclerView.layoutManager = LinearLayoutManager(this)
-            btnViewToggle.setImageResource(R.drawable.ic_view_module)
+            btnViewToggle.setImageResource(android.R.drawable.ic_dialog_dialer)
         }
     }
 
     private fun showDeleteDialog(file: File, position: Int) {
         AlertDialog.Builder(this)
-            .setTitle("DELETE?")
-            .setMessage("Remove ${file.name}?")
-            .setPositiveButton("DELETE") { _, _ ->
+            .setTitle("Delete File")
+            .setMessage("Are you sure you want to delete ${file.name}?")
+            .setPositiveButton("Delete") { _, _ ->
                 val iconFile = File(file.parent, file.nameWithoutExtension + ".png")
-                if (file.exists()) file.delete()
+                file.delete()
                 if (iconFile.exists()) iconFile.delete()
                 files.removeAt(position)
                 recyclerView.adapter?.notifyItemRemoved(position)
             }
-            .setNegativeButton("CANCEL", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -94,57 +97,43 @@ class GalleryActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val file = files[position]
-            val isLandscape = holder.itemView.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-            
-            if (isGridView || isLandscape) {
-                holder.root.orientation = LinearLayout.VERTICAL
-                val tParams = holder.textView.layoutParams as LinearLayout.LayoutParams
-                tParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-                tParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-                tParams.weight = 0f
-                tParams.marginStart = 0
-                holder.textView.layoutParams = tParams
-                holder.textView.gravity = android.view.Gravity.CENTER
-                holder.textView.maxLines = 1
-                holder.textView.ellipsize = android.text.TextUtils.TruncateAt.END
-                holder.textView.setPadding(0, 4, 0, 0)
-            } else {
-                holder.root.orientation = LinearLayout.HORIZONTAL
-                val tParams = holder.textView.layoutParams as LinearLayout.LayoutParams
-                tParams.width = 0
-                tParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-                tParams.weight = 1f
-                tParams.marginStart = 8
-                holder.textView.layoutParams = tParams
-                holder.textView.gravity = android.view.Gravity.START
-                holder.textView.maxLines = Int.MAX_VALUE
-                holder.textView.setPadding(0, 0, 0, 0)
-            }
+            holder.textView.text = file.nameWithoutExtension
+            UiUtils.autoScaleText(holder.textView)
 
-            holder.textView.text = file.name
-            
             val iconFile = File(file.parent, file.nameWithoutExtension + ".png")
             if (iconFile.exists()) {
                 val bitmap = BitmapFactory.decodeFile(iconFile.absolutePath)
                 holder.imageView.setImageBitmap(bitmap)
             } else {
-                holder.imageView.setImageResource(android.R.drawable.ic_menu_report_image)
+                holder.imageView.setImageResource(android.R.drawable.ic_media_play)
             }
 
-            holder.itemView.setOnClickListener {
-                val intent = Intent(this@GalleryActivity, ViewerActivity::class.java).apply {
-                    putExtra("FILE_PATH", file.absolutePath)
-                }
+            holder.root.setOnClickListener {
+                val intent = Intent(this@GalleryActivity, ViewerActivity::class.java)
+                intent.putExtra("FILE_PATH", file.absolutePath)
                 startActivity(intent)
             }
 
-            holder.itemView.setOnLongClickListener {
+            holder.root.setOnLongClickListener {
                 showDeleteDialog(file, position)
                 true
             }
+
+            // Adjust layout for grid/list
+            if (isGridView) {
+                holder.root.orientation = LinearLayout.VERTICAL
+                holder.textView.maxLines = 1
+                holder.imageView.layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+                holder.imageView.layoutParams.height = holder.imageView.width
+            } else {
+                holder.root.orientation = LinearLayout.HORIZONTAL
+                holder.textView.maxLines = 2
+                holder.imageView.layoutParams.width = holder.imageView.context.resources.displayMetrics.density.toInt() * 64
+                holder.imageView.layoutParams.height = holder.imageView.context.resources.displayMetrics.density.toInt() * 64
+            }
         }
 
-        override fun getItemCount(): Int = files.size
+        override fun getItemCount() = files.size
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val root: LinearLayout = view.findViewById(R.id.galleryItemRoot)

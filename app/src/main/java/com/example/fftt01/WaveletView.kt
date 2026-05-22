@@ -114,7 +114,7 @@ class WaveletView @JvmOverloads constructor(
     private var lastTouchY = 0f
 
     // Color schemes
-    private val colorSchemes = arrayOf(
+    val colorSchemes = arrayOf(
         intArrayOf( // 0: Heat (Original 7-color)
             Color.parseColor("#4B0082"), // Indigo
             Color.BLUE,

@@ -21,6 +21,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:weightSum="5">
 
+        <TextView
+            android:id="@+id/txtTitleViewer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/title_analysis"
+            android:textColor="#FFFFFF"
+            android:textSize="@dimen/font_button"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
         <Spinner
             android:id="@+id/vSizeSpinner"
             android:layout_width="0dp"
@@ -45,7 +56,7 @@
             android:text="@string/sweep_off"
             android:backgroundTint="#FF69B4"
             android:textColor="#FFFFFF"
-            android:textSize="@dimen/font_button"
+            android:textSize="@dimen/font_control_small"
             android:textStyle="bold"
             android:padding="0dp"
             android:insetTop="0dp"
@@ -61,7 +72,7 @@
             android:text="@string/btn_gallery"
             android:backgroundTint="#FFFF00"
             android:textColor="#000000"
-            android:textSize="@dimen/font_button"
+            android:textSize="@dimen/font_control_small"
             android:textStyle="bold"
             android:padding="0dp"
             android:insetTop="0dp"
@@ -74,10 +85,10 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="LISTEN"
+            android:text="@string/btn_back"
             android:backgroundTint="#00FFFF"
             android:textColor="#000000"
-            android:textSize="@dimen/font_button"
+            android:textSize="@dimen/font_control_small"
             android:textStyle="bold"
             android:padding="0dp"
             android:insetTop="0dp"

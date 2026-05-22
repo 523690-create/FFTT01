@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fftHeatMap: FFTHeatMapView
     private lateinit var cropOverlay: CropOverlayView
     
-    // Nullable controls for orientation safety
     private var micSpinner: Spinner? = null
     private var colorSpinner: Spinner? = null
     private var btnSaveInRow: Button? = null
@@ -78,8 +77,8 @@ class MainActivity : AppCompatActivity() {
     private var noiseFloor = FloatArray(fftSize / 2)
     private var noiseFilterStrength = 0f
 
-    private var selectedDevice: AudioDeviceInfo? = null
-    private var availableDevices = mutableListOf<AudioDeviceInfo>()
+    private var selectedDevice: Any? = null // AudioDeviceInfo is API 23+
+    private var availableDevices = mutableListOf<Any>()
     private var isCalibrating = false
     @Volatile private var latestFrameEnergy = 0f
 
@@ -98,11 +97,9 @@ class MainActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
 
-        // Core Views (must exist)
         fftHeatMap = findViewById(R.id.fftHeatMap)
         cropOverlay = findViewById(R.id.cropOverlay)
 
-        // Nullable Controls (Safe lookups)
         micSpinner = findViewById(R.id.micSpinner)
         colorSpinner = findViewById(R.id.colorSpinner)
         btnSaveInRow = findViewById(R.id.btnSaveInRow)
@@ -121,11 +118,13 @@ class MainActivity : AppCompatActivity() {
 
         btnLatency?.setOnClickListener { runLatencyMeasurement() }
 
-        findViewById<Button>(R.id.btnGallery).setOnClickListener {
+        val galleryBtn = findViewById<Button>(R.id.btnGallery)
+        galleryBtn.setOnClickListener {
             startActivity(Intent(this, GalleryActivity::class.java))
         }
 
-        findViewById<Button>(R.id.btnQuitTop).setOnClickListener {
+        val quitBtn = findViewById<Button>(R.id.btnQuitTop)
+        quitBtn.setOnClickListener {
             showQuitSanityCheck()
         }
 
@@ -135,6 +134,14 @@ class MainActivity : AppCompatActivity() {
             fftHeatMap.isFrozen = false
             startRecording()
         }
+        
+        // Auto scale buttons and titles
+        UiUtils.autoScaleText(findViewById(R.id.txtTitleMain))
+        UiUtils.autoScaleText(btnLatency)
+        UiUtils.autoScaleText(galleryBtn)
+        UiUtils.autoScaleText(quitBtn)
+        UiUtils.autoScaleText(btnSaveInRow)
+        UiUtils.autoScaleText(btnEscInRow)
 
         val historySize = (3 * sampleRate) / stepSize
         fftHeatMap.setMaxHistory(historySize)
@@ -142,15 +149,8 @@ class MainActivity : AppCompatActivity() {
         
         setupEqSliders()
         
-        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        if (!isLandscape) {
-            setupNoiseFilter()
-            setupColorSpinner()
-        } else {
-            noiseFilterStrength = prefs.getFloat("noise_filter_strength", 0f)
-            val savedColorScheme = prefs.getInt("color_scheme", 0)
-            fftHeatMap.setColorScheme(savedColorScheme)
-        }
+        setupNoiseFilter()
+        setupColorSpinner()
 
         findViewById<android.view.ViewGroup>(android.R.id.content).post {
             updateAllLabelPositions()
@@ -194,8 +194,9 @@ class MainActivity : AppCompatActivity() {
     private fun initAudio() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-            availableDevices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS).toMutableList()
-            setupMicSpinnerWithDevices(availableDevices)
+            val devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS)
+            availableDevices = devices.toMutableList()
+            setupMicSpinnerWithDevices(devices.toList())
 
             selectedDevice?.let { dev ->
                 val index = availableDevices.indexOf(dev)
@@ -212,15 +213,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun showFrozenUi() {
         saveEscContainer?.visibility = View.VISIBLE
-        micAndColorLayout?.let { if (it.id != -1) it.visibility = View.GONE }
-        mainButtonsLayout?.let { if (it.id != -1) it.visibility = View.GONE }
+        micAndColorLayout?.visibility = View.GONE
+        mainButtonsLayout?.visibility = View.GONE
         cropOverlay.visibility = View.VISIBLE
     }
 
     private fun hideFrozenUi() {
         saveEscContainer?.visibility = View.GONE
-        micAndColorLayout?.let { if (it.id != -1) it.visibility = View.VISIBLE }
-        mainButtonsLayout?.let { if (it.id != -1) it.visibility = View.VISIBLE }
+        micAndColorLayout?.visibility = View.VISIBLE
+        mainButtonsLayout?.visibility = View.VISIBLE
         cropOverlay.visibility = View.GONE
     }
 
@@ -323,11 +324,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupColorSpinner() {
         val spinner = colorSpinner ?: return
-        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) return
-
         val colorNames = arrayOf("Default", "Viridis", "Magma", "Gray")
         val displayNames = colorNames.map { "Color:$it" }
-        val adapter = ArrayAdapter(this, R.layout.spinner_item_gold, displayNames)
+        val adapter = ArrayAdapter(this, R.layout.spinner_item_large, displayNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
 
@@ -338,24 +337,42 @@ class MainActivity : AppCompatActivity() {
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 fftHeatMap.setColorScheme(position)
-                prefs.edit { putInt("color_scheme", position) }
+                prefs.edit().putInt("color_scheme", position).apply()
+                styleColorSpinner(spinner, position)
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+        styleColorSpinner(spinner, savedColorScheme)
     }
 
-    private fun setupMicSpinnerWithDevices(devices: List<AudioDeviceInfo>) {
-        val spinner = micSpinner ?: return
-        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) return
+    private fun styleColorSpinner(spinner: Spinner, schemeIdx: Int) {
+        spinner.post {
+            val scheme = fftHeatMap.colorSchemes[schemeIdx.coerceIn(0, fftHeatMap.colorSchemes.size - 1)]
+            val bgColor = scheme[0]
+            val textColor = scheme[scheme.size - 1]
+            
+            spinner.setBackgroundColor(bgColor)
+            val selectedView = spinner.selectedView as? TextView
+            selectedView?.setTextColor(textColor)
+            selectedView?.setBackgroundColor(bgColor)
+            
+            if (selectedView != null) {
+                selectedView.text = getString(R.string.label_color_simple)
+                UiUtils.autoScaleText(selectedView)
+            }
+        }
+    }
 
-        val deviceNames = devices.map { 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                it.productName.toString() + " (" + getDeviceTypeName(it.type) + ")" 
+    private fun setupMicSpinnerWithDevices(devices: List<Any>) {
+        val spinner = micSpinner ?: return
+        val deviceNames = devices.map { dev ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && dev is AudioDeviceInfo) {
+                dev.productName.toString() + " (" + getDeviceTypeName(dev.type) + ")" 
             } else {
                 "Microphone"
             }
         }
-        val adapter = ArrayAdapter(this, R.layout.spinner_item_orange, deviceNames)
+        val adapter = ArrayAdapter(this, R.layout.spinner_item_large, deviceNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
 
@@ -367,12 +384,27 @@ class MainActivity : AppCompatActivity() {
                     selectedDevice = newDevice
                     restartRecording()
                 }
+                
+                val selectedView = spinner.selectedView as? TextView
+                if (selectedView != null) {
+                    selectedView.text = getString(R.string.label_mic_simple)
+                    UiUtils.autoScaleText(selectedView)
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+        
+        spinner.post {
+            val selectedView = spinner.selectedView as? TextView
+            if (selectedView != null) {
+                selectedView.text = getString(R.string.label_mic_simple)
+                UiUtils.autoScaleText(selectedView)
+            }
         }
     }
 
     private fun getDeviceTypeName(type: Int): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return "Other"
         return when (type) {
             AudioDeviceInfo.TYPE_BUILTIN_MIC -> "Built-in Mic"
             AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth"
@@ -383,13 +415,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun Slider.setSafeValue(v: Float) {
-        val step = this.stepSize
-        if (step > 0f) {
-            val numSteps = round((v - valueFrom) / step)
-            this.value = (valueFrom + numSteps * step).coerceIn(valueFrom, valueTo)
+        val newVal = v.coerceIn(valueFrom, valueTo)
+        // If stepSize is set, snap to the nearest step to satisfy Material Slider validation
+        val snappedVal = if (stepSize > 0) {
+            round((newVal - valueFrom) / stepSize) * stepSize + valueFrom
         } else {
-            this.value = v.coerceIn(valueFrom, valueTo)
+            newVal
         }
+        val finalVal = snappedVal.coerceIn(valueFrom, valueTo)
+        if (abs(value - finalVal) > 1e-5f) value = finalVal
     }
 
     private fun setupEqSliders() {
@@ -478,8 +512,14 @@ class MainActivity : AppCompatActivity() {
         noiseRiseCoeff = (k / riseMs).coerceIn(0.001f, 1.0f)
         noiseFallCoeff = (k / fallMs).coerceIn(0.001f, 1.0f)
         
-        findViewById<TextView>(R.id.txtRiseValue)?.text = getString(R.string.ms_value, riseMs.toInt())
-        findViewById<TextView>(R.id.txtFallValue)?.text = getString(R.string.ms_value, fallMs.toInt())
+        findViewById<TextView>(R.id.txtRiseValue)?.let {
+            it.text = getString(R.string.ms_value, riseMs.toInt())
+            UiUtils.autoScaleText(it)
+        }
+        findViewById<TextView>(R.id.txtFallValue)?.let {
+            it.text = getString(R.string.ms_value, fallMs.toInt())
+            UiUtils.autoScaleText(it)
+        }
     }
 
     private fun updateAllLabelPositions() {
@@ -511,7 +551,6 @@ class MainActivity : AppCompatActivity() {
             val maxThickness = resources.getDimension(R.dimen.slider_track_height) * 2.5f
             val thickness = (availableWidth - 2 * gutterPx).coerceAtMost(maxThickness)
             
-            // Set slider to be invisible but interactive
             slider.trackActiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             slider.trackInactiveTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             slider.thumbTintList = ColorStateList.valueOf(Color.TRANSPARENT)
@@ -525,10 +564,9 @@ class MainActivity : AppCompatActivity() {
                 it.setTextColor(Color.BLACK)
                 it.elevation = 6f * density
                 it.minWidth = (40f * density).toInt()
-                val baseSp = resources.getDimension(R.dimen.font_label_small) / density
-                it.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, baseSp)
                 it.gravity = android.view.Gravity.CENTER
                 it.setPadding(0, (2f * density).toInt(), 0, 0)
+                UiUtils.autoScaleText(it)
             }
 
             updateLabelPosition(slider, label)
@@ -561,11 +599,11 @@ class MainActivity : AppCompatActivity() {
         
         val handleHeight = 24f * density
         val availableLength = totalHeight - handleHeight
-        val thumbY = availableLength - (normalizedValue * availableLength) + handleHeight / 2f
+        val barTopY = availableLength - (normalizedValue * availableLength)
         
-        label.translationY = thumbY - (label.top + label.height / 2f)
+        label.translationY = barTopY - label.top
         
-        val targetHeight = (totalHeight - (thumbY - handleHeight / 2f)).toInt().coerceAtLeast(handleHeight.toInt())
+        val targetHeight = (totalHeight - barTopY).toInt().coerceAtLeast(handleHeight.toInt())
         if (label.layoutParams.height != targetHeight) {
             label.layoutParams.height = targetHeight
             label.requestLayout()
@@ -579,6 +617,7 @@ class MainActivity : AppCompatActivity() {
         label.setBackgroundColor(barColor)
         label.setTextColor(Color.BLACK)
         label.elevation = 6f * density
+        UiUtils.autoScaleText(label)
     }
 
     private fun startRecording() {
@@ -587,8 +626,9 @@ class MainActivity : AppCompatActivity() {
 
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (selectedDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
-                audioManager.setCommunicationDevice(selectedDevice!!)
+            val dev = selectedDevice
+            if (dev is AudioDeviceInfo && dev.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
+                audioManager.setCommunicationDevice(dev)
             }
         }
 
@@ -596,13 +636,23 @@ class MainActivity : AppCompatActivity() {
         val bufferSize = max(minBufferSize, fftSize * 4)
         
         val record = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            AudioRecord(
-                MediaRecorder.AudioSource.MIC,
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_FLOAT,
-                bufferSize
-            )
+            try {
+                AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    sampleRate,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_FLOAT,
+                    bufferSize
+                )
+            } catch (e: Exception) {
+                AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    sampleRate,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+                )
+            }
         } else {
             AudioRecord(
                 MediaRecorder.AudioSource.MIC,
@@ -613,8 +663,17 @@ class MainActivity : AppCompatActivity() {
             )
         }
         
+        if (record.state != AudioRecord.STATE_INITIALIZED) {
+            android.util.Log.e("FFTT01", "AudioRecord failed to initialize")
+            recording.set(false)
+            return
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            selectedDevice?.let { record.setPreferredDevice(it) }
+            val dev = selectedDevice
+            if (dev is AudioDeviceInfo) {
+                record.setPreferredDevice(dev)
+            }
         }
         
         audioRecord = record
@@ -634,10 +693,9 @@ class MainActivity : AppCompatActivity() {
             val shortBuffer = ShortArray(stepSize)
 
             while (recording.get() && record.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
-                val readCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val readCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && record.audioFormat == AudioFormat.ENCODING_PCM_FLOAT) {
                     record.read(audioBuffer, 0, stepSize, AudioRecord.READ_BLOCKING)
                 } else {
-                    // Fallback for API 21-22: Read as short and convert
                     val sRead = record.read(shortBuffer, 0, stepSize)
                     if (sRead > 0) {
                         for (i in 0 until sRead) {
@@ -788,6 +846,22 @@ class MainActivity : AppCompatActivity() {
                 player?.release()
             }
         }.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (recording.get()) {
+            stopRecording()
+            recording.set(true) // Mark as was recording
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (recording.get() && !fftHeatMap.isFrozen) {
+            recording.set(false) // Reset for startRecording
+            startRecording()
+        }
     }
 
     override fun onDestroy() {
