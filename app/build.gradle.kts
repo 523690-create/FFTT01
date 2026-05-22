@@ -13,9 +13,10 @@ android {
     defaultConfig {
         applicationId = "com.example.fftt01"
         minSdk = 21
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,28 +30,14 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isMinifyEnabled = false
+        }
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
-// Rename and copy APK to project root after build
-val rootPathStr = project.rootDir.absolutePath
-tasks.withType<com.android.build.gradle.tasks.PackageApplication>().configureEach {
-    val captureRoot = rootPathStr
-    doLast {
-        val timestamp = SimpleDateFormat("yyyyMMdd-HHmmss").format(Date())
-        val fileName = "FFTT01-$timestamp.apk"
-        outputDirectory.get().asFile.listFiles()?.forEach { file ->
-            if (file.name.endsWith(".apk")) {
-                val destFile = File(captureRoot, fileName)
-                file.copyTo(destFile, overwrite = true)
-                println("Generated APK in root: ${destFile.absolutePath}")
-            }
-        }
     }
 }
 

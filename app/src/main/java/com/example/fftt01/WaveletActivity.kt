@@ -111,8 +111,6 @@ class WaveletActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnWaveletStop).setOnClickListener { isStopRequested = true }
         findViewById<Button>(R.id.btnWaveletGalleryTop).setOnClickListener { finish() }
         findViewById<Button>(R.id.btnWaveletListenTop).setOnClickListener { 
-            // In wavelet, listen can play the reconstructed audio or original
-            // For now, let's just make it a back button or implement play if needed
             finish() 
         }
         

@@ -35,10 +35,10 @@ class LatencyActivity : AppCompatActivity() {
             }
         }
         
-        UiUtils.autoScaleText(findViewById(R.id.txtTitleLatency))
         UiUtils.autoScaleText(btnMeasure)
         UiUtils.autoScaleText(findViewById(R.id.btnLatencyBack))
         UiUtils.autoScaleText(txtResult)
+        UiUtils.autoScaleText(findViewById(R.id.txtTitleLatency))
     }
 
     private fun runLatencyTest() {
@@ -58,7 +58,9 @@ class LatencyActivity : AppCompatActivity() {
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             
-            val encoding = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AudioFormat.ENCODING_PCM_FLOAT else AudioFormat.ENCODING_PCM_16BIT
+            // On API 22, we must use PCM_16BIT
+            val useFloat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            val encoding = if (useFloat) AudioFormat.ENCODING_PCM_FLOAT else AudioFormat.ENCODING_PCM_16BIT
             
             val format = AudioFormat.Builder()
                 .setEncoding(encoding)
@@ -69,7 +71,7 @@ class LatencyActivity : AppCompatActivity() {
             val audioTrack = AudioTrack(
                 attributes,
                 format,
-                chirp.size * (if (encoding == AudioFormat.ENCODING_PCM_FLOAT) 4 else 2),
+                chirp.size * (if (useFloat) 4 else 2),
                 AudioTrack.MODE_STATIC,
                 AudioManager.AUDIO_SESSION_ID_GENERATE
             )
@@ -80,7 +82,7 @@ class LatencyActivity : AppCompatActivity() {
                 sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
                 encoding,
-                max(minBufferSize, bufferSize * (if (encoding == AudioFormat.ENCODING_PCM_FLOAT) 4 else 2))
+                max(minBufferSize, bufferSize * (if (useFloat) 4 else 2))
             )
 
             if (record.state != AudioRecord.STATE_INITIALIZED) {
@@ -94,17 +96,17 @@ class LatencyActivity : AppCompatActivity() {
 
             val recordedData = FloatArray(bufferSize)
             
-            if (encoding == AudioFormat.ENCODING_PCM_FLOAT && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (useFloat && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 audioTrack.write(chirp, 0, chirp.size, AudioTrack.WRITE_BLOCKING)
             } else {
-                val shortChirp = ShortArray(chirp.size) { i -> (chirp[i] * 32767).toInt().toShort() }
+                val shortChirp = ShortArray(chirp.size) { i -> (chirp[i] * 32767).toInt().toShort().coerceIn(-32768, 32767).toShort() }
                 audioTrack.write(shortChirp, 0, shortChirp.size)
             }
             
             record.startRecording()
             audioTrack.play()
 
-            if (encoding == AudioFormat.ENCODING_PCM_FLOAT && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (useFloat && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 var totalRead = 0
                 while (totalRead < bufferSize) {
                     val read = record.read(recordedData, totalRead, bufferSize - totalRead, AudioRecord.READ_BLOCKING)
@@ -155,7 +157,6 @@ class LatencyActivity : AppCompatActivity() {
             val t = i.toFloat() / sampleRate
             val k = (f1 / f0).pow(1f / t1)
             val phase = 2f * PI.toFloat() * f0 * (k.pow(t) - 1f) / ln(k)
-            // Hamming window
             val window = 0.54f - 0.46f * cos(2f * PI.toFloat() * i / (numSamples - 1))
             chirp[i] = sin(phase) * window
         }
@@ -165,9 +166,7 @@ class LatencyActivity : AppCompatActivity() {
     private fun calculateLatency(chirp: FloatArray, recorded: FloatArray): Float {
         var maxCorr = -1f
         var maxLag = -1
-        
         val searchLimit = min(recorded.size - chirp.size, sampleRate / 2)
-        
         for (lag in 0 until searchLimit) {
             var corr = 0f
             for (i in chirp.indices) {
@@ -178,7 +177,6 @@ class LatencyActivity : AppCompatActivity() {
                 maxLag = lag
             }
         }
-        
         return if (maxLag >= 0) (maxLag.toFloat() / sampleRate) * 1000f else -1f
     }
 }

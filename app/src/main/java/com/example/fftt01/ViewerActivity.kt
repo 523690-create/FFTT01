@@ -75,9 +75,10 @@ class ViewerActivity : AppCompatActivity() {
         filePath?.let { loadAndDecode(File(it)) }
 
         findViewById<Button>(R.id.btnViewerGalleryTop).setOnClickListener { finish() }
-        findViewById<Button>(R.id.btnViewerListenTop).setOnClickListener { playAudio() }
+        findViewById<Button>(R.id.btnViewerListenTop).setOnClickListener { finish() }
         
-        // Auto scale buttons
+        // Auto scale buttons and titles
+        UiUtils.autoScaleText(findViewById(R.id.txtTitleViewer))
         UiUtils.autoScaleText(findViewById(R.id.btnViewerSweep))
         UiUtils.autoScaleText(findViewById(R.id.btnViewerGalleryTop))
         UiUtils.autoScaleText(findViewById(R.id.btnViewerListenTop))
@@ -107,23 +108,10 @@ class ViewerActivity : AppCompatActivity() {
                 prefs.edit().putInt("color_scheme", pos).apply()
                 triggerRefresh()
                 styleColorSpinner(colorSpinner, pos)
-                
-                val selectedView = colorSpinner.selectedView as? TextView
-                if (selectedView != null) {
-                    selectedView.text = getString(R.string.label_color_simple)
-                    UiUtils.autoScaleText(selectedView)
-                }
             }
             override fun onNothingSelected(p0: AdapterView<*>?) {}
         }
         styleColorSpinner(colorSpinner, savedColorScheme)
-        colorSpinner.post {
-            val selectedView = colorSpinner.selectedView as? TextView
-            if (selectedView != null) {
-                selectedView.text = getString(R.string.label_color_simple)
-                UiUtils.autoScaleText(selectedView)
-            }
-        }
     }
 
     private fun styleColorSpinner(spinner: Spinner, schemeIdx: Int) {
@@ -136,6 +124,11 @@ class ViewerActivity : AppCompatActivity() {
             val selectedView = spinner.selectedView as? TextView
             selectedView?.setTextColor(textColor)
             selectedView?.setBackgroundColor(bgColor)
+            
+            if (selectedView != null) {
+                selectedView.text = getString(R.string.label_color_simple)
+                UiUtils.autoScaleText(selectedView)
+            }
         }
     }
 
