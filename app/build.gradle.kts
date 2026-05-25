@@ -41,6 +41,31 @@ android {
     }
 }
 
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            val timestamp = SimpleDateFormat("yyyyMMdd-HHmm").format(Date())
+            output.outputFileName.set("FFTT01-$timestamp.apk")
+        }
+    }
+}
+
+tasks.register("copyApkToRoot") {
+    val apkDir = layout.buildDirectory.dir("outputs/apk/debug")
+    val rootDir = layout.projectDirectory.dir("..")
+    doLast {
+        val apkFolder = apkDir.get().asFile
+        val targetFolder = rootDir.asFile
+        apkFolder.listFiles()?.filter { it.name.startsWith("FFTT01-") && it.extension == "apk" }?.forEach { file ->
+            file.copyTo(File(targetFolder, file.name), overwrite = true)
+        }
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    finalizedBy("copyApkToRoot")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

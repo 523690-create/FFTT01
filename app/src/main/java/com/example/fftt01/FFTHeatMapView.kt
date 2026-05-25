@@ -209,19 +209,28 @@ class FFTHeatMapView @JvmOverloads constructor(
     }
 
     fun setFullHistory(history: List<FloatArray>) {
-        if (spectrogramBitmap == null || history.isEmpty()) return
-        val bmp = spectrogramBitmap!!
-        bmp.eraseColor(Color.TRANSPARENT)
+        val bitmap = spectrogramBitmap ?: return
+        if (history.isEmpty()) return
+        
+        bitmap.eraseColor(Color.TRANSPARENT)
+        precalculateMapping()
+        val mapping = yToBinMapping ?: return
+        val h = bitmap.height
         
         val start = (history.size - maxHistory).coerceAtLeast(0)
         for (i in start until history.size) {
             val magnitudes = history[i]
             val x = (i - start) % maxHistory
-            for (y in 0 until bmp.height) {
-                val bin = yToBinMapping?.get(y) ?: 0
+            val columnPixels = IntArray(h)
+            for (y in 0 until h) {
+                val bin = mapping[y]
                 val mag = magnitudes.getOrNull(bin) ?: 0f
-                bmp.setPixel(x, bmp.height - 1 - y, getColorForValue(mag))
+                columnPixels[y] = getColorForValue(mag)
             }
+            // Use setPixels for speed. Magnitudes are stored upside down in bitmap (y=0 is top)
+            // But our mapping[y] is log-mapped to frequency where y=0 is maxFreq (top).
+            // So we just write the column.
+            bitmap.setPixels(columnPixels, 0, 1, x, 0, 1, h)
         }
         currentColumn = (history.size - start) % maxHistory
         framesProcessed = history.size.toLong()
@@ -239,10 +248,10 @@ class FFTHeatMapView @JvmOverloads constructor(
 
     private fun precalculateMapping() {
         val h = height
-        if (h <= 0) return
+        if (h <= 0 || sampleRate <= 0 || fftSize <= 0) return
         val mapping = IntArray(h)
-        val logMin = log10(minFreq)
-        val logMax = log10(maxFreq)
+        val logMin = log10(minFreq.coerceAtLeast(1f))
+        val logMax = log10(maxFreq.coerceAtLeast(minFreq + 10f))
         val numBins = fftSize / 2
         
         for (y in 0 until h) {

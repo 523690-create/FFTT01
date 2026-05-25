@@ -39,6 +39,8 @@ class LatencyActivity : AppCompatActivity() {
         UiUtils.autoScaleText(findViewById(R.id.btnLatencyBack))
         UiUtils.autoScaleText(txtResult)
         UiUtils.autoScaleText(findViewById(R.id.txtTitleLatency))
+        // Full auto-scale pass after layout settles to ensure captions fit
+        UiUtils.autoScaleAll(findViewById(android.R.id.content), 1000)
     }
 
     private fun runLatencyTest() {

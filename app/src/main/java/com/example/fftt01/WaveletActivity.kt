@@ -128,6 +128,8 @@ class WaveletActivity : AppCompatActivity() {
         UiUtils.autoScaleText(checkLog)
         UiUtils.autoScaleText(checkLocalNorm)
         UiUtils.autoScaleText(checkReconstruct)
+        // Full auto-scale pass after layout settles to ensure all captions fit
+        UiUtils.autoScaleAll(findViewById(android.R.id.content), 1000)
     }
 
     private fun updateAllLabelPositions() {

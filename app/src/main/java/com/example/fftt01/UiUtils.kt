@@ -10,7 +10,7 @@ object UiUtils {
     /**
      * Dynamically scales the text size of a view (TextView, Button, CheckBox, etc.) to fit its bounds.
      */
-    fun autoScaleText(view: View?, horizontalMargin: Int = 8, verticalMargin: Int = 8) {
+    fun autoScaleText(view: View?, horizontalMargin: Int = 2, verticalMargin: Int = 2) {
         if (view == null || view !is TextView) return
         
         view.post {
@@ -22,6 +22,7 @@ object UiUtils {
             
             val width = view.width - view.paddingLeft - view.paddingRight - horizontalMargin
             val height = view.height - view.paddingTop - view.paddingBottom - verticalMargin
+            android.util.Log.d("UiUtils", "View: ${view.id}, Width: $width, Height: $height, RawHeight: ${view.height}")
             if (width <= 0 || height <= 0) return@post
             
             val text = view.text.toString()
@@ -77,5 +78,25 @@ object UiUtils {
                 autoScaleText(selectedView)
             }
         }
+    }
+
+    /**
+     * Walk the view hierarchy under [root] and auto-scale all TextView-derived controls.
+     * Runs after [delayMs] milliseconds to allow the view to finish layout.
+     */
+    fun autoScaleAll(root: View?, delayMs: Long = 1000) {
+        if (root == null) return
+        root.postDelayed({
+            fun walk(v: View) {
+                when (v) {
+                    is TextView -> autoScaleText(v)
+                    is Spinner -> autoScaleSpinner(v)
+                    is android.view.ViewGroup -> {
+                        for (i in 0 until v.childCount) walk(v.getChildAt(i))
+                    }
+                }
+            }
+            walk(root)
+        }, delayMs)
     }
 }

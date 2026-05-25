@@ -156,6 +156,15 @@ class MainActivity : AppCompatActivity() {
             updateAllLabelPositions()
         }
 
+        // Will auto-scale all captions when window focus is gained (layout is 100% ready)
+        var hasScaled = false
+        window.decorView.post {
+            if (!hasScaled) {
+                hasScaled = true
+                performAggressiveAutoScale()
+            }
+        }
+
         fftHeatMap.onSingleTap = {
             fftHeatMap.isFrozen = !fftHeatMap.isFrozen
             if (fftHeatMap.isFrozen) {
@@ -242,16 +251,22 @@ class MainActivity : AppCompatActivity() {
         val endFrac = rect.right / w
         
         val totalSamples = audioBufferSize
-        val fragmentStart = (startFrac * totalSamples).toInt()
-        val fragmentEnd = (endFrac * totalSamples).toInt()
-        val fragmentSize = fragmentEnd - fragmentStart
+        val frozenWriteIndex = audioWriteIndex
+        
+        // Use a stable snapshot of the circular buffer indices
+        val fragmentStart = (startFrac * totalSamples).toInt().coerceIn(0, totalSamples - 1)
+        val fragmentEnd = (endFrac * totalSamples).toInt().coerceIn(0, totalSamples)
+        val fragmentSize = (fragmentEnd - fragmentStart).coerceAtLeast(0)
         
         if (fragmentSize <= 0) return
 
         val fragment = FloatArray(fragmentSize)
-        val frozenWriteIndex = audioWriteIndex
         for (i in 0 until fragmentSize) {
-            val idx = (frozenWriteIndex - totalSamples + fragmentStart + i + totalSamples * 10) % totalSamples
+            // Calculate absolute index in the circular buffer
+            // Since startFrac/endFrac are 0.0 at the left (oldest) and 1.0 at the right (newest),
+            // and the buffer is currently at frozenWriteIndex (next write position),
+            // the "left-most" visible sample is at (frozenWriteIndex - totalSamples)
+            val idx = (frozenWriteIndex + fragmentStart + i) % totalSamples
             fragment[i] = audioCircularBuffer[idx]
         }
 
@@ -759,8 +774,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun stopRecording() {
         recording.set(false)
+        try {
+            audioRecord?.stop()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         recordingThread?.join()
-        audioRecord?.stop()
         audioRecord?.release()
         audioRecord = null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -867,5 +886,9 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopRecording()
+    }
+
+    private fun performAggressiveAutoScale() {
+        UiUtils.autoScaleAll(findViewById(android.R.id.content), 0)
     }
 }

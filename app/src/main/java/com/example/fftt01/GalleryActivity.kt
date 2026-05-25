@@ -53,6 +53,8 @@ class GalleryActivity : AppCompatActivity() {
         UiUtils.autoScaleText(findViewById(R.id.txtTitleGallery))
         UiUtils.autoScaleText(findViewById(R.id.btnBack))
         UiUtils.autoScaleText(findViewById(R.id.btnViewToggle))
+        // Full auto-scale pass after layout settles to ensure captions fit
+        UiUtils.autoScaleAll(findViewById(android.R.id.content), 1000)
     }
 
     private fun loadFiles() {
